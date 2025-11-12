@@ -105,7 +105,7 @@ export const EmptyState = memo(function EmptyState({
 						tabIndex={0}
 						type="button"
 					>
-						<PlusIcon className="h-6 w-6 text-primary" size={16} />
+						<PlusIcon className="size-6 text-accent-foreground" size={16} />
 					</button>
 				)}
 			</div>

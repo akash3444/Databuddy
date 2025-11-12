@@ -19,6 +19,8 @@
     "drizzle-orm": "^0.44.7",
     "effect": "^3.17.14",
     "nanoid": "^5.1.5",
+    "pino": "catalog:",
+    "pino-pretty": "^11.2.2",
     "pg": "^8.16.3",
     "superjson": "catalog:",
     "zod": "catalog:"

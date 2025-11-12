@@ -73,9 +73,9 @@ export function CategorySidebar({
 	const activeCategory = selectedCategory || defaultCategory;
 
 	return (
-		<div className="fixed inset-y-0 left-0 z-40 w-12 border-sidebar-border border-r bg-sidebar-primary">
+		<div className="fixed inset-y-0 left-0 z-40 w-12 border-r bg-transparent">
 			<div className="flex h-full flex-col">
-				<div className="flex h-12 items-center justify-center border-sidebar-border border-b">
+				<div className="flex h-12 items-center justify-center  border-b">
 					<Link
 						className="relative shrink-0 transition-opacity hover:opacity-80"
 						href="/websites"
@@ -127,7 +127,7 @@ export function CategorySidebar({
 
 				<div className="flex-1" />
 
-				<div className="space-y-2 border-sidebar-border border-t p-2 pb-4">
+				<div className="space-y-2  border-t p-2 pb-4">
 					<div className="flex justify-center">
 						<div className="flex h-8 w-8 items-center justify-center">
 							<NotificationsPopover />

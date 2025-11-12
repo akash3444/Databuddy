@@ -5,6 +5,7 @@ import { memo } from "react";
 import type { useAccordionStates } from "@/hooks/use-persistent-state";
 import { NavigationItem } from "./navigation-item";
 import type { NavigationSection as NavigationSectionType } from "./types";
+import clsx from "clsx";
 
 type NavigationSectionProps = {
 	title: string;
@@ -118,9 +119,9 @@ export const NavigationSection = memo(function NavigationSectionComponent({
 	}
 
 	return (
-		<div className="border-sidebar-border/30 border-b border-dotted last:border-b-0">
+		<div>
 			<button
-				className="flex w-full items-center gap-3 px-3 py-2.5 text-left font-medium text-sidebar-foreground text-sm transition-colors hover:bg-sidebar-accent/50 focus:outline-none"
+				className={clsx("flex w-full items-center gap-3 px-3 py-2.5 text-left font-medium text-sidebar-foreground text-sm transition-colors focus:outline-none", isExpanded ? "bg-sidebar-accent-brighter" : "hover:bg-sidebar-accent-brighter")}
 				data-section={title}
 				data-track="navigation-section-toggle"
 				onClick={() => toggleAccordion(title, true)}
@@ -128,16 +129,13 @@ export const NavigationSection = memo(function NavigationSectionComponent({
 			>
 				<Icon className="size-5 shrink-0 text-sidebar-ring" weight="fill" />
 				<span className="flex-1 text-sm">{title}</span>
-				<motion.div
-					animate={{ rotate: isExpanded ? 180 : 0 }}
+				<div
 					className="shrink-0"
-					transition={{ duration: 0.2 }}
 				>
 					<CaretDownIcon
-						className="h-4 w-4 text-sidebar-foreground/60"
-						weight="duotone"
+						className={clsx("size-4 transition-transform duration-200 text-sidebar-foreground/60", isExpanded ? "rotate-180" : "")}
 					/>
-				</motion.div>
+				</div>
 			</button>
 
 			<MotionConfig

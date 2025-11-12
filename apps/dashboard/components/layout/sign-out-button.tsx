@@ -45,7 +45,6 @@ export function SignOutButton() {
 					<SignOutIcon
 						className={isLoggingOut ? "animate-pulse" : ""}
 						size={16}
-						weight="duotone"
 					/>
 				</Button>
 			</TooltipTrigger>

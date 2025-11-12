@@ -222,8 +222,11 @@ export function FlagSheet({
 			>
 				<SheetHeader className="space-y-3 border-border/50 border-b pb-6">
 					<div className="flex items-center gap-3">
-						<div className="rounded border border-primary/20 bg-primary/10 p-3">
-							<FlagIcon className="h-6 w-6 text-primary" weight="duotone" />
+						<div className="rounded border border-accent bg-accent/50 p-3">
+							<FlagIcon
+								className="size-6 text-accent-foreground"
+								weight="duotone"
+							/>
 						</div>
 						<div>
 							<SheetTitle className="font-semibold text-foreground text-xl">

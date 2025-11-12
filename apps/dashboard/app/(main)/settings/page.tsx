@@ -135,9 +135,9 @@ export default function SettingsPage() {
 				<div className="flex h-24 items-center px-4 sm:px-6">
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-4">
-							<div className="rounded-xl border border-primary/20 bg-primary/10 p-3">
+							<div className="rounded-xl border border-accent bg-accent/50 p-3">
 								<GearSixIcon
-									className="h-6 w-6 text-primary"
+									className="h-6 w-6 text-accent-foreground"
 									size={24}
 									weight="duotone"
 								/>

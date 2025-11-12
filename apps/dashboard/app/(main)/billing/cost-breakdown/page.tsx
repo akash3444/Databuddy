@@ -71,8 +71,8 @@ export default function CostBreakdownPage() {
 		<div className="flex h-full flex-col">
 			<div className="border-b bg-linear-to-r from-background to-muted/20 px-6 py-6">
 				<div className="flex items-center gap-4">
-					<div className="rounded-xl border border-primary/20 bg-primary/10 p-3">
-						<ChartLineUpIcon className="h-6 w-6 text-primary" />
+					<div className="rounded-xl border border-accent bg-accent/50 p-3">
+						<ChartLineUpIcon className="h-6 w-6 text-accent-foreground" />
 					</div>
 					<div>
 						<div className="flex items-center gap-3">

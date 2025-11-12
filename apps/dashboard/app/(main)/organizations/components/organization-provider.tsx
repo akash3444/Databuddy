@@ -128,7 +128,7 @@ export function OrganizationProvider({
 					<div className="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center sm:gap-0 sm:px-6 sm:py-6">
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-3 sm:gap-4">
-								<div className="rounded border border-primary/20 bg-primary/10 p-2 sm:p-3">
+								<div className="rounded border border-accent bg-accent/50 p-2 sm:p-3">
 									<Skeleton className="h-5 w-5 sm:h-6 sm:w-6" />
 								</div>
 								<div>
@@ -155,9 +155,9 @@ export function OrganizationProvider({
 					<div className="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center sm:gap-0 sm:px-6 sm:py-6">
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-3 sm:gap-4">
-								<div className="rounded border border-primary/20 bg-primary/10 p-2 sm:p-3">
+								<div className="rounded border border-accent bg-accent/50 p-2 sm:p-3">
 									<Icon
-										className="h-5 w-5 text-primary sm:h-6 sm:w-6"
+										className="h-5 w-5 text-accent-foreground sm:h-6 sm:w-6"
 										size={20}
 										weight="duotone"
 									/>
@@ -195,7 +195,7 @@ export function OrganizationProvider({
 							size={40}
 							weight="duotone"
 						/>
-						<h3 className="mb-2 font-semibold text-base sm:text-lg">
+						<h3 className="font-semibold text-base sm:text-lg">
 							Select an Organization
 						</h3>
 						<p className="text-muted-foreground text-xs sm:text-sm">
@@ -226,9 +226,9 @@ export function OrganizationProvider({
 				<div className="flex flex-col justify-between gap-2.5 p-3 sm:flex-row sm:items-center sm:gap-0 sm:px-5 sm:py-4">
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-2.5">
-							<div className="rounded border border-primary/20 bg-primary/10 p-2">
+							<div className="rounded border border-accent bg-accent/50 p-2">
 								<Icon
-									className="h-5 w-5 text-primary"
+									className="h-5 w-5 text-accent-foreground"
 									size={20}
 									weight="duotone"
 								/>

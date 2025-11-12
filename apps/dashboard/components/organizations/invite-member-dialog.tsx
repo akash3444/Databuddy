@@ -81,7 +81,7 @@ export function InviteMemberDialog({
 		<Dialog onOpenChange={handleClose} open={open}>
 			<DialogContent className="max-w-md p-4">
 				<div className="mb-3 flex items-center gap-3">
-					<div className="rounded border border-primary/20 bg-primary/10 p-2">
+					<div className="rounded border border-accent bg-accent/50 p-2">
 						<UserPlusIcon className="h-4 w-4 text-primary" weight="duotone" />
 					</div>
 					<div>

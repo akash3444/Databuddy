@@ -58,10 +58,10 @@ function EnhancedEmptyState() {
 							weight="duotone"
 						/>
 					</div>
-					<div className="-top-2 -right-2 absolute rounded-full border border-primary/20 bg-primary/10 p-2">
+					<div className="-top-2 -right-2 absolute rounded-full border border-accent bg-accent/50 p-2">
 						<ChartLineIcon
 							aria-hidden="true"
-							className="h-6 w-6 text-primary"
+							className="size-6 text-accent-foreground"
 							size={24}
 							weight="fill"
 						/>

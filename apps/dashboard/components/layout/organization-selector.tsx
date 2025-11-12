@@ -71,10 +71,11 @@ function OrganizationSelectorTrigger({
 	return (
 		<div
 			className={cn(
-				"flex h-12 w-full items-center border-sidebar-border border-b bg-sidebar-accent px-3 py-3 transition-colors",
+				"flex h-12 w-full items-center border-b bg-sidebar-accent px-3 py-3 transition-colors",
 				"hover:bg-sidebar-accent/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring/50",
 				isSettingActiveOrganization && "cursor-not-allowed opacity-70",
-				isOpen && "bg-sidebar-accent/60"
+				isOpen && "bg-sidebar-accent/60",
+				""
 			)}
 		>
 			<div className="flex w-full items-center justify-between">
@@ -116,7 +117,6 @@ function OrganizationSelectorTrigger({
 							"h-4 w-4 text-sidebar-accent-foreground/60 transition-transform duration-200",
 							isOpen && "rotate-180"
 						)}
-						weight="fill"
 					/>
 				)}
 			</div>
@@ -169,7 +169,7 @@ export function OrganizationSelector() {
 
 	if (isLoading) {
 		return (
-			<div className="flex h-12 w-full items-center border-sidebar-border border-b bg-sidebar-accent px-3 py-3">
+			<div className="flex h-12 w-full items-center bg-sidebar-accent px-3 py-3">
 				<div className="flex w-full items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className="rounded-lg bg-sidebar/80 p-1.5 ring-1 ring-sidebar-border/50">
@@ -215,7 +215,7 @@ export function OrganizationSelector() {
 				</DropdownMenuTrigger>
 				<DropdownMenuContent
 					align="start"
-					className="w-72 rounded-none border-sidebar-border bg-sidebar p-0"
+					className="w-72 rounded-none border-t-0 border-r border-l-0 bg-sidebar p-0"
 					sideOffset={0}
 				>
 					<DropdownMenuItem
@@ -238,10 +238,7 @@ export function OrganizationSelector() {
 							</span>
 						</div>
 						{!activeOrganization && (
-							<CheckIcon
-								className="h-4 w-4 not-dark:text-primary"
-								weight="duotone"
-							/>
+							<CheckIcon className="h-4 w-4 not-dark:text-primary" />
 						)}
 					</DropdownMenuItem>
 
@@ -284,7 +281,7 @@ export function OrganizationSelector() {
 						</div>
 					)}
 
-					<DropdownMenuSeparator className="m-0 bg-sidebar-border p-0" />
+					<DropdownMenuSeparator className="m-0 p-0" />
 					<DropdownMenuItem
 						className="flex cursor-pointer items-center gap-3 px-4 py-2.5 text-sidebar-foreground/70 text-sm transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
 						onClick={handleCreateOrganization}

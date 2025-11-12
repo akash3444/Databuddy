@@ -132,7 +132,7 @@ export function OrganizationsList({
 							{isActive && (
 								<div className="absolute top-3 right-3">
 									<Badge
-										className="border-primary/20 bg-primary/10 text-primary text-xs"
+										className="border-accent bg-accent/50 text-primary text-xs"
 										variant="secondary"
 									>
 										<CheckIcon className="mr-1 h-3 w-3" size={12} />

@@ -176,14 +176,14 @@ function WebsiteDetailsPage() {
 				<EmptyState
 					action={
 						<Link href="/websites">
-							<Button variant="outline">Back to Websites</Button>
+							<Button size="sm">Back to Websites</Button>
 						</Link>
 					}
 					description="The website you are looking for does not exist or you do not have access."
 					icon={
 						<WarningIcon
 							aria-hidden="true"
-							className="h-10 w-10"
+							className="size-12"
 							weight="duotone"
 						/>
 					}

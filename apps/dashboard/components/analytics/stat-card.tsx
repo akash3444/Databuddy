@@ -277,7 +277,7 @@ export function StatCard({
 		<Card
 			className={cn(
 				"group overflow-hidden pt-0",
-				"border-border/50 hover:border-primary/20",
+				"border-border/50 hover:border-primary/20 transition-colors duration-200",
 				"bg-card",
 				getVariantClasses(),
 				className
@@ -285,7 +285,7 @@ export function StatCard({
 			id={id}
 		>
 			<div className="relative p-3 sm:p-4">
-				<div className="absolute inset-0 bg-linear-to-br from-primary/2 to-transparent opacity-0 group-hover:opacity-100" />
+				<div className="absolute inset-0 bg-linear-to-br from-primary/2 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
 				<div className="relative z-10 space-y-1.5 sm:space-y-2">
 					<div className="flex items-start justify-between">

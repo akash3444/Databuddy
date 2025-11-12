@@ -146,7 +146,7 @@ function InlineCode({ className, ...props }: InlineCodeProps) {
 	return (
 		<code
 			className={cn(
-				"relative rounded border border-primary/20 bg-primary/10 px-1.5 py-0.5 font-geist-mono font-medium text-primary text-sm",
+				"relative rounded border border-accent bg-accent/50 px-1.5 py-0.5 font-geist-mono font-medium text-primary text-sm",
 				className
 			)}
 			{...props}

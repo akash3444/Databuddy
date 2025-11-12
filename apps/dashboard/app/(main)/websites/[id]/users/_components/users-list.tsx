@@ -274,7 +274,7 @@ export function UsersList({ websiteId }: UsersListProps) {
 					<div className="flex h-full flex-col justify-center gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg border border-primary/20 bg-primary/10 p-2">
+								<div className="rounded-lg border border-accent bg-accent/50 p-2">
 									<UsersIcon className="h-5 w-5 text-primary" />
 								</div>
 								<div className="min-w-0 flex-1">
@@ -334,7 +334,7 @@ export function UsersList({ websiteId }: UsersListProps) {
 					<div className="flex h-full flex-col justify-center gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg border border-primary/20 bg-primary/10 p-2">
+								<div className="rounded-lg border border-accent bg-accent/50 p-2">
 									<UsersIcon className="h-5 w-5 text-primary" />
 								</div>
 								<div className="min-w-0 flex-1">
@@ -369,7 +369,7 @@ export function UsersList({ websiteId }: UsersListProps) {
 					<div className="flex h-full flex-col justify-center gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
 						<div className="min-w-0 flex-1">
 							<div className="flex items-center gap-3">
-								<div className="rounded-lg border border-primary/20 bg-primary/10 p-2">
+								<div className="rounded-lg border border-accent bg-accent/50 p-2">
 									<UsersIcon className="h-5 w-5 text-primary" />
 								</div>
 								<div className="min-w-0 flex-1">
@@ -403,7 +403,7 @@ export function UsersList({ websiteId }: UsersListProps) {
 				<div className="flex h-full flex-col justify-center gap-2 px-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-3">
-							<div className="rounded-lg border border-primary/20 bg-primary/10 p-2">
+							<div className="rounded-lg border border-accent bg-accent/50 p-2">
 								<UsersIcon className="h-5 w-5 text-primary" />
 							</div>
 							<div className="min-w-0 flex-1">

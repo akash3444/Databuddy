@@ -226,7 +226,7 @@ export function Sidebar() {
 				aria-hidden={!isMobileOpen}
 				className={cn(
 					"fixed inset-y-0 z-40 w-56 bg-sidebar sm:w-60 md:w-64 lg:w-72",
-					"border-sidebar-border border-r transition-transform duration-200 ease-out",
+					"border-r transition-transform duration-200 ease-out",
 					"left-0 md:left-12",
 					"pt-12 md:pt-0",
 					"md:translate-x-0",

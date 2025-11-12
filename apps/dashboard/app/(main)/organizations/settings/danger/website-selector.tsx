@@ -75,7 +75,7 @@ export function WebsiteSelector({
 			) : (
 				<div className="py-6 text-center">
 					<GlobeIcon
-						className="mx-auto mb-2 h-6 w-6 text-primary"
+						className="mx-auto mb-2 size-6 text-accent-foreground"
 						size={24}
 						weight="duotone"
 					/>

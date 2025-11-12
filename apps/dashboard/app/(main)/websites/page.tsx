@@ -98,10 +98,10 @@ export default function WebsitesPage() {
 				<div className="flex flex-col justify-between gap-3 p-3 sm:flex-row sm:items-center sm:gap-0 sm:px-4 sm:py-4">
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-3">
-							<div className="rounded-lg border border-primary/20 bg-primary/10 p-2">
+							<div className="rounded-lg border bg-accent-foreground p-2">
 								<TrendUpIcon
 									aria-hidden="true"
-									className="h-5 w-5 text-primary"
+									className="size-5 text-accent"
 									size={24}
 									weight="fill"
 								/>
@@ -141,7 +141,7 @@ export default function WebsitesPage() {
 							onClick={() => setDialogOpen(true)}
 							size="default"
 						>
-							<div className="absolute inset-0 translate-x-[-100%] bg-linear-to-r from-white/0 via-white/20 to-white/0 transition-transform duration-700 group-hover:translate-x-[100%]" />
+							<div className="-translate-x-full absolute inset-0 bg-linear-to-r from-white/0 via-white/20 to-white/0 transition-transform duration-700 group-hover:translate-x-full" />
 							<PlusIcon className="relative z-10 h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
 							<span className="relative z-10 truncate">New Website</span>
 						</Button>
@@ -157,10 +157,10 @@ export default function WebsitesPage() {
 				{/* Website count indicator */}
 				{!isLoading && websites && websites.length > 0 && (
 					<div className="mb-6">
-						<div className="flex items-center gap-2 rounded-lg border border-muted bg-muted/30 px-3 py-2 text-muted-foreground text-sm">
+						<div className="flex items-center gap-2 rounded-lg border bg-accent px-3 py-2 text-muted-foreground text-sm">
 							<GlobeIcon
 								aria-hidden="true"
-								className="h-4 w-4 shrink-0"
+								className="h-4 w-4 shrink-0 text-accent-foreground"
 								size={24}
 								weight="duotone"
 							/>

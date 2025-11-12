@@ -127,7 +127,7 @@ function LoginPage() {
 								<GithubLogoIcon className="mr-2 h-5 w-5" />
 								<span>Sign in with GitHub</span>
 								{lastUsed === "github" && (
-									<span className="-top-4 -right-0.5 absolute inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 font-medium text-primary text-xs">
+									<span className="-top-4 -right-0.5 absolute inline-flex items-center rounded-full border border-accent bg-accent/50 px-1.5 py-0.5 font-medium text-primary text-xs">
 										Last used
 									</span>
 								)}
@@ -142,7 +142,7 @@ function LoginPage() {
 								<GoogleLogoIcon className="mr-2 h-5 w-5" />
 								<span>Sign in with Google</span>
 								{lastUsed === "google" && (
-									<span className="-top-4 -right-0.5 absolute inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 font-medium text-primary text-xs">
+									<span className="-top-4 -right-0.5 absolute inline-flex items-center rounded-full border border-accent bg-accent/50 px-1.5 py-0.5 font-medium text-primary text-xs">
 										Last used
 									</span>
 								)}
@@ -176,7 +176,7 @@ function LoginPage() {
 										value={email}
 									/>
 									{lastUsed === "email" && (
-										<span className="-translate-y-1/2 absolute top-1/2 right-2 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-1.5 py-0.5 font-medium text-primary text-xs sm:px-2">
+										<span className="-translate-y-1/2 absolute top-1/2 right-2 inline-flex items-center rounded-full border border-accent bg-accent/50 px-1.5 py-0.5 font-medium text-primary text-xs sm:px-2">
 											<span className="hidden sm:inline">Last used</span>
 											<span className="sm:hidden">★</span>
 										</span>

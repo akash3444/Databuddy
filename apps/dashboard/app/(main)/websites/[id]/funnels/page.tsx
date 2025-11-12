@@ -244,7 +244,7 @@ export default function FunnelsPage() {
 				hasError={!!funnelsError}
 				icon={
 					<FunnelIcon
-						className="h-6 w-6 text-primary"
+						className="size-6 text-accent-foreground"
 						size={16}
 						weight="duotone"
 					/>
