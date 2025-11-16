@@ -1,12 +1,15 @@
 import "./polyfills/compression";
 import { auth } from "@databuddy/auth";
 import { appRouter, createRPCContext } from "@databuddy/rpc";
+import { logger } from "@databuddy/shared/logger";
 import cors from "@elysiajs/cors";
+import { opentelemetry } from "@elysiajs/opentelemetry";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { autumnHandler } from "autumn-js/elysia";
 import { Elysia } from "elysia";
-import { logger } from "./lib/logger";
 import { assistant } from "./routes/assistant";
 // import { customSQL } from './routes/custom-sql';
 import { exportRoute } from "./routes/export";
@@ -17,15 +20,27 @@ import { query } from "./routes/query";
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
 		onError((error) => {
-			logger.error({
-				message: error instanceof Error ? error.message : String(error),
-				error,
-			});
+			logger.error(error);
 		}),
 	],
 });
 
 const app = new Elysia()
+	.use(
+		opentelemetry({
+			spanProcessors: [
+				new BatchSpanProcessor(
+					new OTLPTraceExporter({
+						url: "https://api.axiom.co/v1/traces",
+						headers: {
+							Authorization: `Bearer ${process.env.AXIOM_TOKEN}`,
+							"X-Axiom-Dataset": process.env.AXIOM_DATASET ?? "api",
+						},
+					})
+				),
+			],
+		})
+	)
 	.use(publicApi)
 	.use(
 		cors({
@@ -42,36 +57,56 @@ const app = new Elysia()
 	.use(
 		autumnHandler({
 			identify: async ({ request }) => {
-				const session = await auth.api.getSession({
-					headers: request.headers,
-				});
+				try {
+					const session = await auth.api.getSession({
+						headers: request.headers,
+					});
 
-				return {
-					customerId: session?.user.id,
-					customerData: {
-						name: session?.user.name,
-						email: session?.user.email,
-					},
-				};
+					return {
+						customerId: session?.user.id,
+						customerData: {
+							name: session?.user.name,
+							email: session?.user.email,
+						},
+					};
+				} catch (error) {
+					logger.error({ error }, "Failed to get session for autumn handler");
+					return {
+						customerId: null,
+						customerData: {
+							name: null,
+							email: null,
+						},
+					};
+				}
 			},
 		})
 	)
 	.use(query)
 	.use(assistant)
 	.use(exportRoute)
-	.all("/rpc/*", async ({ request }: { request: Request }) => {
-		const context = await createRPCContext({ headers: request.headers });
-		const { response } = await rpcHandler.handle(request, {
-			prefix: "/rpc",
-			context,
-		});
-		return response ?? new Response("Not Found", { status: 404 });
-	}, {
-		parse: "none",
-	})
-	.onError(({ error, code }) => {
+	.all(
+		"/rpc/*",
+		async ({ request }: { request: Request }) => {
+			try {
+				const context = await createRPCContext({ headers: request.headers });
+				const { response } = await rpcHandler.handle(request, {
+					prefix: "/rpc",
+					context,
+				});
+				return response ?? new Response("Not Found", { status: 404 });
+			} catch (error) {
+				logger.error({ error }, "RPC handler failed");
+				return new Response("Internal Server Error", { status: 500 });
+			}
+		},
+		{
+			parse: "none",
+		}
+	)
+	.onError(function handleError({ error, code }) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
-		logger.error({ message: errorMessage, code, error });
+		logger.error({ error, code }, errorMessage);
 
 		return new Response(
 			JSON.stringify({
@@ -89,11 +124,11 @@ export default {
 };
 
 process.on("SIGINT", () => {
-	logger.info("SIGINT signal received, shutting down...");
+	logger.info({ message: "SIGINT signal received, shutting down..." });
 	process.exit(0);
 });
 
 process.on("SIGTERM", () => {
-	logger.info("SIGTERM signal received, shutting down...");
+	logger.info({ message: "SIGTERM signal received, shutting down..." });
 	process.exit(0);
 });

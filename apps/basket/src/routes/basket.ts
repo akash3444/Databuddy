@@ -19,8 +19,9 @@ import {
 	insertWebVitals,
 	insertWebVitalsBatch,
 } from "../lib/event-service";
+import { logger } from "../lib/logger";
 import { checkForBot, validateRequest } from "../lib/request-validation";
-import { getDailySalt, saltAnonymousId } from "../lib/security";
+
 import {
 	analyticsEventSchema,
 	customEventSchema,
@@ -53,7 +54,13 @@ async function processTrackEventData(
 	ip: string
 ): Promise<AnalyticsEvent> {
 	const eventId = parseEventId(trackData.eventId, randomUUID);
-	const { anonymizedIP, country, region, city } = await getGeo(ip);
+
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { anonymizedIP, country, region, city } = geoData;
 	const {
 		browserName,
 		browserVersion,
@@ -62,7 +69,8 @@ async function processTrackEventData(
 		deviceType,
 		deviceBrand,
 		deviceModel,
-	} = parseUserAgent(userAgent);
+	} = uaData;
+
 	const now = Date.now();
 	const timestamp = parseTimestamp(trackData.timestamp);
 	const sessionStartTime = parseTimestamp(trackData.sessionStartTime);
@@ -143,9 +151,13 @@ async function processErrorEventData(
 	const now = Date.now();
 	const timestamp = parseTimestamp(payload.timestamp);
 
-	const { anonymizedIP, country, region } = await getGeo(ip);
-	const { browserName, browserVersion, osName, osVersion, deviceType } =
-		parseUserAgent(userAgent);
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { anonymizedIP, country, region } = geoData;
+	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
 
 	return {
 		id: randomUUID(),
@@ -197,9 +209,13 @@ async function processWebVitalsEventData(
 	const now = Date.now();
 	const timestamp = parseTimestamp(payload.timestamp);
 
-	const { country, region } = await getGeo(ip);
-	const { browserName, browserVersion, osName, osVersion, deviceType } =
-		parseUserAgent(userAgent);
+	const [geoData, uaData] = await Promise.all([
+		getGeo(ip),
+		parseUserAgent(userAgent),
+	]);
+
+	const { country, region } = geoData;
+	const { browserName, browserVersion, osName, osVersion, deviceType } = uaData;
 
 	return {
 		id: randomUUID(),
@@ -237,8 +253,14 @@ function processCustomEventData(
 	return {
 		id: randomUUID(),
 		client_id: clientId,
-		event_name: sanitizeString(customData.name, VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH),
-		anonymous_id: sanitizeString(customData.anonymousId, VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH),
+		event_name: sanitizeString(
+			customData.name,
+			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+		),
+		anonymous_id: sanitizeString(
+			customData.anonymousId,
+			VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH
+		),
 		session_id: validateSessionId(customData.sessionId),
 		properties: parseProperties(customData.properties),
 		timestamp: parseTimestamp(customData.timestamp),
@@ -276,38 +298,23 @@ const app = new Elysia()
 
 		try {
 			const validation = await validateRequest(body, query, request);
+
 			if ("error" in validation) {
 				return validation.error;
 			}
 
 			const { clientId, userAgent, ip } = validation;
-
-			const salt = await getDailySalt();
-			if (body.anonymous_id) {
-				body.anonymous_id = saltAnonymousId(body.anonymous_id, salt);
-			}
-
 			const eventType = body.type || "track";
 
 			if (eventType === "track") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(analyticsEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					analyticsEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					return createSchemaErrorResponse(parseResult.error.issues);
@@ -326,24 +333,14 @@ const app = new Elysia()
 					};
 				}
 
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(errorEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					errorEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					return createSchemaErrorResponse(parseResult.error.issues);
@@ -354,24 +351,14 @@ const app = new Elysia()
 			}
 
 			if (eventType === "web_vitals") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(webVitalsEventSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					webVitalsEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					return createSchemaErrorResponse(parseResult.error.issues);
@@ -402,24 +389,14 @@ const app = new Elysia()
 			}
 
 			if (eventType === "outgoing_link") {
-				const botError = await checkForBot(
-					request,
-					body,
-					query,
-					clientId,
-					userAgent
-				);
+				const [botError, parseResult] = await Promise.all([
+					checkForBot(request, body, query, clientId, userAgent),
+					validateEventSchema(outgoingLinkSchema, body, request, query, clientId),
+				]);
+
 				if (botError) {
 					return botError.error;
 				}
-
-				const parseResult = await validateEventSchema(
-					outgoingLinkSchema,
-					body,
-					request,
-					query,
-					clientId
-				);
 
 				if (!parseResult.success) {
 					return createSchemaErrorResponse(parseResult.error.issues);
@@ -431,7 +408,7 @@ const app = new Elysia()
 
 			return { status: "error", message: "Unknown event type" };
 		} catch (error) {
-			console.error("Error processing event:", error);
+			logger.error({ error }, "Error processing event");
 			return { status: "error", message: "Internal server error" };
 		}
 	})
@@ -444,7 +421,7 @@ const app = new Elysia()
 
 		try {
 			if (!Array.isArray(body)) {
-				console.error("Batch endpoint received non-array body");
+				logger.error({ body }, "Batch endpoint received non-array body");
 				return {
 					status: "error",
 					message: "Batch endpoint expects array of events",
@@ -461,13 +438,6 @@ const app = new Elysia()
 			}
 
 			const { clientId, userAgent, ip } = validation;
-
-			const salt = await getDailySalt();
-			for (const event of body) {
-				if (event.anonymous_id) {
-					event.anonymous_id = saltAnonymousId(event.anonymous_id, salt);
-				}
-			}
 
 			const trackEvents: AnalyticsEvent[] = [];
 			const errorEvents: ErrorEvent[] = [];
@@ -716,7 +686,7 @@ const app = new Elysia()
 				results,
 			};
 		} catch (error) {
-			console.error("Error processing batch event:", error);
+			logger.error({ error }, "Error processing batch event");
 			return { status: "error", message: "Internal server error" };
 		}
 	});

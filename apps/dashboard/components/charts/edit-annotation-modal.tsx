@@ -34,13 +34,13 @@ import {
 import { cn } from "@/lib/utils";
 import type { Annotation, AnnotationFormData } from "@/types/annotations";
 
-interface EditAnnotationModalProps {
+type EditAnnotationModalProps = {
 	isOpen: boolean;
 	annotation: Annotation | null;
 	onClose: () => void;
 	onSave: (id: string, updates: AnnotationFormData) => Promise<void>;
 	isSaving?: boolean;
-}
+};
 
 export function EditAnnotationModal({
 	isOpen,
@@ -88,7 +88,9 @@ export function EditAnnotationModal({
 	};
 
 	const handleSave = async () => {
-		if (!annotation) return;
+		if (!annotation) {
+			return;
+		}
 
 		const formData: AnnotationFormData = {
 			text: sanitizeAnnotationText(text),
@@ -124,7 +126,9 @@ export function EditAnnotationModal({
 		return `${formatDate(startDate)} - ${formatDate(endDate)}`;
 	};
 
-	if (!annotation) return null;
+	if (!annotation) {
+		return null;
+	}
 
 	return (
 		<Dialog onOpenChange={onClose} open={isOpen}>
@@ -220,19 +224,20 @@ export function EditAnnotationModal({
 									{COMMON_ANNOTATION_TAGS.filter(
 										(tag) => !selectedTags.includes(tag.value)
 									).map((tag) => (
-										<button
+										<Button
 											className="flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1 text-xs transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
 											disabled={isSaving}
 											key={tag.value}
 											onClick={() => addTag(tag.value)}
 											style={{ borderColor: tag.color }}
+											type="button"
 										>
 											<div
 												className="h-2 w-2 rounded-full"
 												style={{ backgroundColor: tag.color }}
 											/>
 											{tag.label}
-										</button>
+										</Button>
 									))}
 								</div>
 							</div>
@@ -244,7 +249,7 @@ export function EditAnnotationModal({
 						<Label className="font-medium">Annotation Color</Label>
 						<div className="flex gap-2">
 							{ANNOTATION_COLORS.map((color) => (
-								<button
+								<Button
 									className={cn(
 										"h-10 w-10 rounded-full border-2 transition-all hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100",
 										selectedColor === color.value
@@ -256,7 +261,14 @@ export function EditAnnotationModal({
 									onClick={() => setSelectedColor(color.value)}
 									style={{ backgroundColor: color.value }}
 									title={color.label}
-								/>
+									type="button"
+								>
+									<div
+										className="h-2 w-2 rounded-full"
+										style={{ backgroundColor: color.value }}
+									/>
+									{color.label}
+								</Button>
 							))}
 						</div>
 					</div>

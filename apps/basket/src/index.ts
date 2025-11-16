@@ -1,12 +1,17 @@
-// import './polyfills/compression'
+import "./polyfills/compression";
 
 import { Elysia } from "elysia";
 import { logger } from "./lib/logger";
-// import stripeRouter from './routes/stripe';
 import { getProducerStats } from "./lib/producer";
+import {
+	endRequestSpan,
+	initTracing,
+	startRequestSpan,
+} from "./lib/tracing";
 import basketRouter from "./routes/basket";
 import emailRouter from "./routes/email";
-import "./polyfills/compression";
+
+initTracing();
 
 function getKafkaHealth() {
 	const stats = getProducerStats();
@@ -34,21 +39,13 @@ function getKafkaHealth() {
 		lastErrorTime: stats.lastErrorTime,
 	};
 }
-// import { checkBotId } from "botid/server";
 
 const app = new Elysia()
-	.onError(({ error }) => {
-		logger.error(
-			new Error(
-				`${error instanceof Error ? error.name : "Unknown"}: ${error instanceof Error ? error.message : "Unknown"}`
-			)
-		);
+	.state("tracing", {
+		span: null as ReturnType<typeof startRequestSpan> | null,
+		startTime: 0,
 	})
-	.onBeforeHandle(({ request, set }) => {
-		// const { isBot } = await checkBotId();
-		// if (isBot) {
-		//   return new Response(null, { status: 403 });
-		// }
+	.onBeforeHandle(function handleCors({ request, set }) {
 		const origin = request.headers.get("origin");
 		if (origin) {
 			set.headers ??= {};
@@ -60,23 +57,51 @@ const app = new Elysia()
 			set.headers["Access-Control-Allow-Credentials"] = "true";
 		}
 	})
+	.onBeforeHandle(function startTrace({ request, path, store }) {
+		const method = request.method;
+		const startTime = Date.now();
+		const span = startRequestSpan(method, request.url, path);
+
+		// Store span and start time in Elysia store
+		store.tracing = {
+			span,
+			startTime,
+		};
+	})
+	.onAfterHandle(function endTrace({ response, store }) {
+		if (store.tracing?.span && store.tracing.startTime) {
+			const statusCode = response instanceof Response ? response.status : 200;
+			endRequestSpan(store.tracing.span, statusCode, store.tracing.startTime);
+		}
+	})
+	.onError(function handleError({ error, code, store }) {
+		if (store.tracing?.span && store.tracing.startTime) {
+			const statusCode = code === "NOT_FOUND" ? 404 : 500;
+			endRequestSpan(store.tracing.span, statusCode, store.tracing.startTime);
+		}
+
+		if (code === "NOT_FOUND") {
+			return new Response(null, { status: 404 });
+		}
+		logger.error({ error }, "Error in basket service");
+	})
 	.options("*", () => new Response(null, { status: 204 }))
 	.use(basketRouter)
-	// .use(stripeRouter)
 	.use(emailRouter)
-	.get("/health", () => ({
-		status: "ok",
-		version: "1.0.0",
-		producer_stats: getProducerStats(),
-		kafka: getKafkaHealth(),
-	}));
+	.get("/health", function healthCheck() {
+		return {
+			status: "ok",
+			version: "1.0.0",
+			producer_stats: getProducerStats(),
+			kafka: getKafkaHealth(),
+		};
+	});
 
 const port = process.env.PORT || 4000;
 
 console.log(`Starting basket service on port ${port}`);
-console.log(`Basket service running on http://localhost:${port}`);
 
 export default {
 	fetch: app.fetch,
-	port: Number.parseInt(port.toString()),
+	port,
 };

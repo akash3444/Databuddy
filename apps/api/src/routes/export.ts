@@ -1,6 +1,7 @@
 import { auth, websitesApi } from "@databuddy/auth";
 import { db, eq, websites } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
+import { record, setAttributes } from "@elysiajs/opentelemetry";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { Elysia, t } from "elysia";
@@ -21,7 +22,7 @@ const getWebsiteById = cacheable(
 				where: eq(websites.id, id),
 			});
 		} catch (error) {
-			console.error("Error fetching website by ID:", error, { id });
+			logger.error({ error, websiteId: id }, "Error fetching website by ID");
 			return null;
 		}
 	},
@@ -41,201 +42,232 @@ async function authorizeWebsiteAccess(
 	websiteId: string,
 	permission: "read" | "update" | "delete" | "transfer"
 ) {
-	const website = await getWebsiteById(websiteId);
+	try {
+		const website = await getWebsiteById(websiteId);
 
-	if (!website) {
-		throw new Error("Website not found");
-	}
-
-	// Public websites allow read access
-	if (permission === "read" && website.isPublic) {
-		return website;
-	}
-
-	const session = await auth.api.getSession({ headers });
-	const user = session?.user;
-
-	if (!user) {
-		throw new Error("Authentication is required for this action");
-	}
-
-	if (user.role === "ADMIN") {
-		return website;
-	}
-
-	if (website.organizationId) {
-		const { success } = await websitesApi.hasPermission({
-			headers,
-			body: { permissions: { website: [permission] } },
-		});
-		if (!success) {
-			throw new Error("You do not have permission to perform this action");
+		if (!website) {
+			throw new Error("Website not found");
 		}
-	} else if (website.userId !== user.id) {
-		// Check direct ownership
-		throw new Error("You are not the owner of this website");
-	}
 
-	return website;
+		// Public websites allow read access
+		if (permission === "read" && website.isPublic) {
+			return website;
+		}
+
+		const session = await auth.api.getSession({ headers });
+		const user = session?.user;
+
+		if (!user) {
+			throw new Error("Authentication is required for this action");
+		}
+
+		if (user.role === "ADMIN") {
+			return website;
+		}
+
+		if (website.organizationId) {
+			const { success } = await websitesApi.hasPermission({
+				headers,
+				body: { permissions: { website: [permission] } },
+			});
+			if (!success) {
+				throw new Error("You do not have permission to perform this action");
+			}
+		} else if (website.userId !== user.id) {
+			// Check direct ownership
+			throw new Error("You are not the owner of this website");
+		}
+
+		return website;
+	} catch (error) {
+		logger.error({ error, websiteId, permission }, "Failed to authorize website access");
+		throw error;
+	}
 }
 
 export const exportRoute = new Elysia({ prefix: "/v1/export" })
 	.post(
 		"/data",
-		async ({ body, request }) => {
-			const startTime = Date.now();
-			const requestId = Math.random().toString(36).slice(2, 12);
+		function exportData({ body, request }) {
+			return record("exportData", async () => {
+				const startTime = Date.now();
+				const requestId = Math.random().toString(36).slice(2, 12);
 
-			try {
 				const websiteId = body.website_id;
-
-				if (!websiteId) {
-					return createErrorResponse(
-						400,
-						"MISSING_WEBSITE_ID",
-						"Website ID is required"
-					);
-				}
-
-				const _website = await authorizeWebsiteAccess(
-					request.headers,
-					websiteId,
-					"read"
-				);
-
-				if (!_website) {
-					return createErrorResponse(
-						403,
-						"ACCESS_DENIED",
-						"Access denied. You may not have permission to export data for this website."
-					);
-				}
-
-				const { validatedDates, error: dateError } = validateDateRange(
-					body.start_date,
-					body.end_date
-				);
-
-				if (dateError) {
-					logger.warn({
-						message: "Export request with invalid dates",
-						requestId,
-						websiteId,
-						startDate: body.start_date,
-						endDate: body.end_date,
-						error: dateError,
-					});
-					return createErrorResponse(400, "INVALID_DATE_RANGE", dateError);
-				}
-
 				const format = body.format || "json";
-				if (!["csv", "json", "txt", "proto"].includes(format)) {
-					logger.warn({
-						message: "Export request with invalid format",
-						requestId,
+
+				setAttributes({
+					"export.request_id": requestId,
+					"export.website_id": websiteId || "missing",
+					"export.format": format,
+					"export.start_date": body.start_date,
+					"export.end_date": body.end_date,
+				});
+
+				try {
+					if (!websiteId) {
+						setAttributes({ "export.error": "missing_website_id" });
+						return createErrorResponse(
+							400,
+							"MISSING_WEBSITE_ID",
+							"Website ID is required"
+						);
+					}
+
+					const _website = await authorizeWebsiteAccess(
+						request.headers,
 						websiteId,
-						format,
-					});
-					return createErrorResponse(
-						400,
-						"INVALID_FORMAT",
-						"Invalid export format. Supported formats: csv, json, txt, proto"
+						"read"
 					);
-				}
 
-				logger.info({
-					message: "Data export initiated",
-					requestId,
-					websiteId,
-					startDate: validatedDates.startDate,
-					endDate: validatedDates.endDate,
-					format,
-					userAgent: request.headers.get("user-agent"),
-					ip:
-						request.headers.get("x-forwarded-for") ||
-						request.headers.get("x-real-ip"),
-					timestamp: new Date().toISOString(),
-				});
-
-				const exportRequest: ExportRequest = {
-					website_id: websiteId,
-					start_date: validatedDates.startDate,
-					end_date: validatedDates.endDate,
-					format: format as ExportRequest["format"],
-				};
-
-				const result = await processExport(exportRequest);
-
-				logger.info({
-					message: "Data export completed successfully",
-					requestId,
-					websiteId,
-					filename: result.filename,
-					fileSize: result.buffer.length,
-					totalRecords: result.metadata.totalRecords,
-					processingTime: Date.now() - startTime,
-					timestamp: new Date().toISOString(),
-				});
-
-				return new Response(result.buffer, {
-					headers: {
-						"Content-Type": "application/zip",
-						"Content-Disposition": `attachment; filename="${result.filename}"`,
-						"Content-Length": result.buffer.length.toString(),
-					},
-				});
-			} catch (error) {
-				logger.error({
-					message: "Data export failed",
-					requestId,
-					websiteId: body.website_id,
-					error: error instanceof Error ? error.message : String(error),
-					stack: error instanceof Error ? error.stack : undefined,
-					processingTime: Date.now() - startTime,
-					userAgent: request.headers.get("user-agent"),
-					ip:
-						request.headers.get("x-forwarded-for") ||
-						request.headers.get("x-real-ip"),
-					timestamp: new Date().toISOString(),
-				});
-
-				if (error instanceof Error) {
-					if (error.message.includes("not found")) {
-						return createErrorResponse(
-							404,
-							"WEBSITE_NOT_FOUND",
-							"Website not found",
-							requestId
-						);
-					}
-					if (error.message.includes("Authentication is required")) {
-						return createErrorResponse(
-							401,
-							"AUTH_REQUIRED",
-							"Authentication required",
-							requestId
-						);
-					}
-					if (
-						error.message.includes("permission") ||
-						error.message.includes("owner")
-					) {
+					if (!_website) {
+						setAttributes({ "export.error": "access_denied" });
 						return createErrorResponse(
 							403,
 							"ACCESS_DENIED",
-							"Access denied. You may not have permission to export data for this website.",
-							requestId
+							"Access denied. You may not have permission to export data for this website."
 						);
 					}
-				}
 
-				return createErrorResponse(
-					500,
-					"EXPORT_FAILED",
-					"Export failed. Please try again later.",
-					requestId
-				);
-			}
+					const { validatedDates, error: dateError } = validateDateRange(
+						body.start_date,
+						body.end_date
+					);
+
+					if (dateError) {
+						setAttributes({ "export.error": "invalid_date_range" });
+						logger.warn(
+							{
+								requestId,
+								websiteId,
+								startDate: body.start_date,
+								endDate: body.end_date,
+								error: dateError,
+							},
+							"Export request with invalid dates"
+						);
+						return createErrorResponse(400, "INVALID_DATE_RANGE", dateError);
+					}
+
+					if (!["csv", "json", "txt", "proto"].includes(format)) {
+						setAttributes({ "export.error": "invalid_format" });
+						logger.warn(
+							{ requestId, websiteId, format },
+							"Export request with invalid format"
+						);
+						return createErrorResponse(
+							400,
+							"INVALID_FORMAT",
+							"Invalid export format. Supported formats: csv, json, txt, proto"
+						);
+					}
+
+					logger.info(
+						{
+							requestId,
+							websiteId,
+							startDate: validatedDates.startDate,
+							endDate: validatedDates.endDate,
+							format,
+							userAgent: request.headers.get("user-agent"),
+							ip:
+								request.headers.get("x-forwarded-for") ||
+								request.headers.get("x-real-ip"),
+						},
+						"Data export initiated"
+					);
+
+					const exportRequest: ExportRequest = {
+						website_id: websiteId,
+						start_date: validatedDates.startDate,
+						end_date: validatedDates.endDate,
+						format: format as ExportRequest["format"],
+					};
+
+					const result = await processExport(exportRequest);
+
+					const processingTime = Date.now() - startTime;
+
+					setAttributes({
+						"export.success": true,
+						"export.records": result.metadata.totalRecords,
+						"export.file_size": result.buffer.length,
+						"export.processing_time_ms": processingTime,
+					});
+
+					logger.info(
+						{
+							requestId,
+							websiteId,
+							filename: result.filename,
+							fileSize: result.buffer.length,
+							totalRecords: result.metadata.totalRecords,
+							processingTime,
+						},
+						"Data export completed successfully"
+					);
+
+					return new Response(result.buffer, {
+						headers: {
+							"Content-Type": "application/zip",
+							"Content-Disposition": `attachment; filename="${result.filename}"`,
+							"Content-Length": result.buffer.length.toString(),
+						},
+					});
+				} catch (error) {
+					setAttributes({ "export.error": true });
+					logger.error(
+						{
+							error,
+							requestId,
+							websiteId: body.website_id,
+							processingTime: Date.now() - startTime,
+							userAgent: request.headers.get("user-agent"),
+							ip:
+								request.headers.get("x-forwarded-for") ||
+								request.headers.get("x-real-ip"),
+						},
+						"Data export failed"
+					);
+
+					if (error instanceof Error) {
+						if (error.message.includes("not found")) {
+							return createErrorResponse(
+								404,
+								"WEBSITE_NOT_FOUND",
+								"Website not found",
+								requestId
+							);
+						}
+						if (error.message.includes("Authentication is required")) {
+							return createErrorResponse(
+								401,
+								"AUTH_REQUIRED",
+								"Authentication required",
+								requestId
+							);
+						}
+						if (
+							error.message.includes("permission") ||
+							error.message.includes("owner")
+						) {
+							return createErrorResponse(
+								403,
+								"ACCESS_DENIED",
+								"Access denied. You may not have permission to export data for this website.",
+								requestId
+							);
+						}
+					}
+
+					return createErrorResponse(
+						500,
+						"EXPORT_FAILED",
+						"Export failed. Please try again later.",
+						requestId
+					);
+				}
+			});
 		},
 		{
 			body: t.Object({

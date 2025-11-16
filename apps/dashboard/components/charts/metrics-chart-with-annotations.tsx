@@ -23,9 +23,9 @@ type MetricsChartWithAnnotationsProps = {
 	title?: string;
 	description?: string;
 	className?: string;
-	metricsFilterAction?: (metric: any) => boolean;
+	metricsFilter?: (metric: any) => boolean;
 	showLegend?: boolean;
-	onRangeSelectAction?: (dateRange: { startDate: Date; endDate: Date }) => void;
+	onRangeSelect?: (dateRange: { startDate: Date; endDate: Date }) => void;
 	dateRange?: {
 		startDate: Date;
 		endDate: Date;
@@ -41,9 +41,9 @@ export function MetricsChartWithAnnotations({
 	title,
 	description,
 	className,
-	metricsFilterAction,
+	metricsFilter,
 	showLegend = true,
-	onRangeSelectAction,
+	onRangeSelect,
 	dateRange,
 }: MetricsChartWithAnnotationsProps) {
 	const [editingAnnotation, setEditingAnnotation] = useState<Annotation | null>(
@@ -85,7 +85,7 @@ export function MetricsChartWithAnnotations({
 			input: {
 				websiteId,
 				chartType: "metrics" as const,
-				chartContext: chartContext!,
+				chartContext: chartContext as any,
 			},
 		}),
 		enabled: !!websiteId && !!chartContext,
@@ -216,11 +216,11 @@ export function MetricsChartWithAnnotations({
 				granularity={dateRange?.granularity}
 				height={height}
 				isLoading={isLoading}
-				metricsFilterAction={metricsFilterAction}
+				metricsFilter={metricsFilter}
 				onCreateAnnotation={handleCreateAnnotation}
 				onDeleteAnnotation={handleDeleteAnnotation}
 				onEditAnnotation={handleEditAnnotation}
-				onRangeSelectAction={onRangeSelectAction}
+				onRangeSelect={onRangeSelect}
 				onToggleAnnotations={setShowAnnotations}
 				showAnnotations={showAnnotations}
 				showLegend={showLegend}

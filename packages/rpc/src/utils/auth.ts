@@ -1,7 +1,7 @@
 import { websitesApi } from "@databuddy/auth";
 import { db, dbConnections, eq, websites } from "@databuddy/db";
 import { cacheable } from "@databuddy/redis";
-import { logger } from "@databuddy/shared/utils/discord-webhook";
+import { logger } from "@databuddy/shared/logger";
 import { ORPCError } from "@orpc/server";
 import type { Context } from "../orpc";
 
@@ -18,9 +18,11 @@ const getWebsiteById = cacheable(
 			});
 		} catch (error) {
 			logger.error(
-				"Error fetching website by ID:",
-				error instanceof Error ? error.message : String(error),
-				{ id }
+				{
+					error,
+					id,
+				},
+				"Error fetching website by ID"
 			);
 			return null;
 		}
@@ -43,9 +45,11 @@ const getDbConnectionById = async (id: string) => {
 		});
 	} catch (error) {
 		logger.error(
-			"Error fetching database connection by ID:",
-			error instanceof Error ? error.message : String(error),
-			{ id }
+			{
+				error,
+				id,
+			},
+			"Error fetching database connection by ID"
 		);
 		return null;
 	}

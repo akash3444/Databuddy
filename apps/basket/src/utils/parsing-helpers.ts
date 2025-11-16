@@ -9,13 +9,13 @@ type ParseResult<T> =
 /**
  * Validates event schema in production, skips validation in development
  */
-export async function validateEventSchema<T>(
+export function validateEventSchema<T>(
 	schema: z.ZodSchema<T>,
 	event: unknown,
 	request: Request,
 	query: unknown,
 	clientId: string
-): Promise<ParseResult<T>> {
+): ParseResult<T> {
 	if (process.env.NODE_ENV === "development") {
 		return { success: true, data: event as T };
 	}
@@ -23,7 +23,7 @@ export async function validateEventSchema<T>(
 	const parseResult = schema.safeParse(event);
 
 	if (!parseResult.success) {
-		await logBlockedTraffic(
+		logBlockedTraffic(
 			request,
 			event,
 			query,
@@ -81,15 +81,15 @@ export function parseProperties(properties: unknown): string {
 /**
  * Creates standardized bot check result
  */
-export interface BotCheckResult {
+export type BotCheckResult = {
 	isBot: boolean;
 	response?: {
 		status: string;
 		message: string;
 		eventType: string;
-		error: string;
+		error?: string;
 	};
-}
+};
 
 /**
  * Parses and sanitizes event ID, generates UUID if missing
@@ -99,7 +99,9 @@ export function parseEventId(
 	generateFn: () => string
 ): string {
 	const sanitizeString = (str: unknown, maxLength: number): string => {
-		if (typeof str !== "string") return "";
+		if (typeof str !== "string") {
+			return "";
+		}
 		return str.slice(0, maxLength);
 	};
 

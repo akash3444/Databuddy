@@ -7,7 +7,7 @@ import {
 	ne,
 	websites,
 } from "@databuddy/db";
-import { logger } from "@databuddy/shared/utils/discord-webhook";
+import { logger } from "@databuddy/shared/logger";
 import { Effect, pipe } from "effect";
 import { nanoid } from "nanoid";
 import { z } from "zod";
@@ -182,16 +182,15 @@ export class WebsiteService {
 		return pipe(
 			Effect.try({
 				try: () =>
-					logger.success(
-						"Website Created",
-						`New website "${createdWebsite.name}" was created with domain "${createdWebsite.domain}"`,
+					logger.info(
 						{
 							websiteId: createdWebsite.id,
 							domain: createdWebsite.domain,
 							userId: createdWebsite.userId,
 							organizationId: createdWebsite.organizationId,
 							...logContext,
-						}
+						},
+						`Website Created: "${createdWebsite.name}" with domain "${createdWebsite.domain}"`
 					),
 				catch: (error) =>
 					new Error(`Logging failed: ${String(error)}`) as WebsiteError,
