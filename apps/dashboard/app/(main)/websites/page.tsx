@@ -106,11 +106,14 @@ export default function WebsitesPage() {
 							disabled={isLoading || isFetching}
 							onClick={() => refetch()}
 							size="icon"
-							variant="outline"
+							variant="secondary"
 						>
 							<ArrowClockwiseIcon
 								aria-hidden
-								className={`h-4 w-4 ${isLoading || isFetching ? "animate-spin" : ""}`}
+								className={cn(
+									"size-4",
+									isLoading || isFetching ? "animate-spin" : ""
+								)}
 							/>
 						</Button>
 						<Button

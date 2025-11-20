@@ -202,7 +202,7 @@ export function TrackingOptionCard({
 	const isEnabled = inverted ? !enabled : enabled;
 
 	return (
-		<div className="rounded border bg-card p-4 transition-all duration-200 hover:bg-muted/20">
+		<div className="rounded border bg-card p-4 transition-all duration-200 hover:bg-accent-brighter">
 			<div className="flex items-start justify-between pb-3">
 				<div className="min-w-0 flex-1 space-y-1 pr-3">
 					<div className="font-medium text-sm">{title}</div>
@@ -338,8 +338,8 @@ export function InfoSection({
 		<Card className="gap-0">
 			<CardHeader className="pb-2">
 				<CardTitle className="flex items-center gap-2 text-base">
-					<div className="flex size-8 items-center justify-center rounded bg-accent-brighter">
-						<InfoIcon className="h-4 w-4" weight="duotone" />
+					<div className="flex size-8 items-center justify-center rounded border bg-accent-brighter">
+						<InfoIcon className="size-4" weight="duotone" />
 					</div>
 					{title}
 				</CardTitle>

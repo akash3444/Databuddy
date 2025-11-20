@@ -118,12 +118,8 @@ export const WebsiteCard = memo(
 			<Card className="flex h-full select-none flex-col gap-0 overflow-hidden bg-background p-0 transition-all duration-300 ease-in-out group-hover:border-primary/60 group-hover:shadow-primary/5 group-hover:shadow-xl motion-reduce:transform-none motion-reduce:transition-none">
 				<CardHeader className="dotted-bg border-b bg-accent-brighter/80 px-0 pt-4">
 					{isLoadingChart ? (
-						<div className="space-y-2">
-							<div className="flex justify-between">
-								<Skeleton className="h-3 w-12 rounded" />
-								<Skeleton className="h-3 w-8 rounded" />
-							</div>
-							<Skeleton className="h-12 w-full rounded sm:h-16" />
+						<div className="px-3">
+							<Skeleton className="mx-auto h-12 w-full rounded sm:h-16" />
 						</div>
 					) : chartData ? (
 						chartData.data.length > 0 ? (

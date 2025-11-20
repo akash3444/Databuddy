@@ -202,11 +202,11 @@ export function TableContent<TData extends { name: string | number }>({
 				style={{ minHeight }}
 			>
 				<div className="mb-4">
-					<div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/20">
-						<DatabaseIcon className="h-7 w-7 text-muted-foreground/50" />
+					<div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-2xl bg-accent-foreground">
+						<DatabaseIcon className="size-6 text-accent" />
 					</div>
 				</div>
-				<h4 className="mb-2 font-medium text-base text-foreground">
+				<h4 className="mb-1 not-last:font-medium text-base text-foreground">
 					{emptyMessage}
 				</h4>
 				<p className="mb-4 max-w-sm text-muted-foreground text-sm">
