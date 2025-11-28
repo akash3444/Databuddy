@@ -24,25 +24,39 @@ export async function GET(
 				flexDirection: "column",
 				alignItems: "flex-start",
 				justifyContent: "flex-end",
-				backgroundColor: "#09090b",
+				backgroundColor: "#000000",
 				padding: "60px 80px",
 				position: "relative",
 			}}
 		>
-			{/* Background gradient */}
+			{/* Spotlight gradient - matching hero aesthetic */}
 			<div
 				style={{
 					position: "absolute",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
+					top: "-40%",
+					left: "20%",
+					width: "800px",
+					height: "600px",
 					background:
-						"radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.3), transparent)",
+						"radial-gradient(ellipse at center, rgba(255, 255, 255, 0.06), transparent 70%)",
+					transform: "rotate(-15deg)",
 				}}
 			/>
 
-			{/* Grid pattern overlay */}
+			{/* Secondary subtle glow */}
+			<div
+				style={{
+					position: "absolute",
+					top: "0%",
+					right: "5%",
+					width: "500px",
+					height: "400px",
+					background:
+						"radial-gradient(ellipse at center, rgba(255, 255, 255, 0.03), transparent 60%)",
+				}}
+			/>
+
+			{/* Subtle grid pattern */}
 			<div
 				style={{
 					position: "absolute",
@@ -51,7 +65,7 @@ export async function GET(
 					right: 0,
 					bottom: 0,
 					backgroundImage:
-						"linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+						"linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)",
 					backgroundSize: "60px 60px",
 				}}
 			/>
@@ -64,36 +78,32 @@ export async function GET(
 					left: "80px",
 					display: "flex",
 					alignItems: "center",
-					gap: "12px",
+					gap: "16px",
 				}}
 			>
-				<div
-					style={{
-						width: "40px",
-						height: "40px",
-						borderRadius: "8px",
-						backgroundColor: "#a855f7",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
+				{/* Pixel-art D logo - black bg with white D */}
+				<svg
+					aria-hidden="true"
+					height="44"
+					style={{ borderRadius: "4px" }}
+					viewBox="0 0 8 8"
+					width="44"
+					xmlns="http://www.w3.org/2000/svg"
 				>
-					<svg
-						aria-hidden="true"
-						fill="white"
-						height="24"
-						viewBox="0 0 24 24"
-						width="24"
-					>
-						<path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM7 7h2v10H7V7zm4 4h2v6h-2v-6zm4-2h2v8h-2V9z" />
-					</svg>
-				</div>
+					<path d="M0 0h8v8H0z" fill="#000" />
+					<path
+						d="M1 1h1v6H1zm1 0h4v1H2zm4 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zm0 1h1v1H6zM2 6h4v1H2zm1-3h1v1H3zm1 1h1v1H4z"
+						fill="#fff"
+					/>
+				</svg>
 				<span
 					style={{
-						color: "#fafafa",
-						fontSize: "24px",
+						color: "#ffffff",
+						fontSize: "22px",
 						fontWeight: 600,
-						letterSpacing: "-0.02em",
+						fontFamily: "monospace",
+						letterSpacing: "0.1em",
+						textTransform: "uppercase",
 					}}
 				>
 					Databuddy
@@ -108,18 +118,18 @@ export async function GET(
 					gap: "8px",
 					marginBottom: "24px",
 					padding: "8px 16px",
-					backgroundColor: "rgba(168, 85, 247, 0.15)",
+					backgroundColor: "rgba(255, 255, 255, 0.06)",
 					borderRadius: "9999px",
-					border: "1px solid rgba(168, 85, 247, 0.3)",
+					border: "1px solid rgba(255, 255, 255, 0.1)",
 				}}
 			>
 				<span
 					style={{
-						color: "#a855f7",
-						fontSize: "14px",
+						color: "#a3a3a3",
+						fontSize: "13px",
 						fontWeight: 500,
 						textTransform: "uppercase",
-						letterSpacing: "0.05em",
+						letterSpacing: "0.08em",
 					}}
 				>
 					Documentation
@@ -129,8 +139,8 @@ export async function GET(
 			{/* Title */}
 			<h1
 				style={{
-					color: "#fafafa",
-					fontSize: "64px",
+					color: "#ffffff",
+					fontSize: "60px",
 					fontWeight: 700,
 					lineHeight: 1.1,
 					letterSpacing: "-0.03em",
@@ -145,9 +155,9 @@ export async function GET(
 			{page.data.description && (
 				<p
 					style={{
-						color: "#a1a1aa",
+						color: "#737373",
 						fontSize: "24px",
-						lineHeight: 1.4,
+						lineHeight: 1.5,
 						maxWidth: "800px",
 					}}
 				>
@@ -168,8 +178,9 @@ export async function GET(
 			>
 				<span
 					style={{
-						color: "#71717a",
+						color: "#525252",
 						fontSize: "18px",
+						fontFamily: "monospace",
 					}}
 				>
 					databuddy.cc/docs
