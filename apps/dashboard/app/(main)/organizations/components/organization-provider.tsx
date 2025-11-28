@@ -3,7 +3,9 @@
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import {
 	BuildingsIcon,
+	EnvelopeIcon,
 	GearIcon,
+	GlobeIcon,
 	KeyIcon,
 	UsersIcon,
 	WarningIcon,
@@ -11,7 +13,8 @@ import {
 import { useAtomValue } from "jotai";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-
+import { PageHeader } from "@/app/(main)/websites/_components/page-header";
+import { EmptyState } from "@/components/empty-state";
 import { CreateOrganizationDialog } from "@/components/organizations/create-organization-dialog";
 import { InviteMemberDialog } from "@/components/organizations/invite-member-dialog";
 import { Button } from "@/components/ui/button";
@@ -21,11 +24,19 @@ import {
 	isLoadingOrganizationsAtom,
 } from "@/stores/jotai/organizationsAtoms";
 
+type HeaderActionButton = {
+	text: string;
+	icon: PhosphorIcon;
+	action: () => void;
+	disabled?: boolean;
+};
+
 type PageInfo = {
 	title: string;
 	description: string;
 	icon: PhosphorIcon;
 	requiresOrg?: boolean;
+	actionButton?: HeaderActionButton;
 };
 
 const PAGE_INFO_MAP: Record<string, PageInfo> = {
@@ -96,6 +107,7 @@ export function OrganizationProvider({
 		description,
 		icon: Icon,
 		requiresOrg,
+		actionButton,
 	} = useMemo(() => PAGE_INFO_MAP[pathname] ?? DEFAULT_PAGE_INFO, [pathname]);
 
 	if (isLoading) {

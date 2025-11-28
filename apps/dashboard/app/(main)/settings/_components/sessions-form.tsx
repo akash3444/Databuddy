@@ -17,7 +17,6 @@ import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
 
@@ -170,9 +169,9 @@ export function SessionsForm() {
 						disabled={isLoading}
 						onClick={handleRevokeAll}
 						size="sm"
-						variant="ghost"
+						variant="secondary"
 					>
-						<SignOutIcon className="mr-2 h-4 w-4" size={16} weight="duotone" />
+						<SignOutIcon className="size-4" size={16} />
 						Revoke All Other Sessions
 					</Button>
 				)}
@@ -194,19 +193,14 @@ export function SessionsForm() {
 					</AlertDescription>
 				</Alert>
 			) : (
-				<div className="space-y-3">
+				<div className="mt-5 space-y-3">
 					{sessions.map((s) => (
 						<div
-							className={cn(
-								"flex items-start justify-between rounded-md border border-accent-foreground/10 p-4",
-								s.isCurrent
-									? "bg-secondary text-accent-foreground"
-									: "border-accent-foreground/20 bg-accent-foreground/5"
-							)}
+							className="flex items-start justify-between rounded-md border bg-secondary p-4 text-accent-foreground"
 							key={s.expiresAt.toString()}
 						>
 							<div className="flex items-start gap-3">
-								<div className="rounded-md bg-accent-foreground/10 p-2">
+								<div className="rounded-md bg-card p-2">
 									{getDeviceIcon(s.userAgent)}
 								</div>
 								<div>
