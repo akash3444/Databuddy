@@ -371,13 +371,12 @@ const SessionsFeature = () => {
 						<motion.div
 							animate={{ opacity: 1, y: 0 }}
 							className="group flex items-center justify-between rounded-lg border border-border/50 bg-secondary/50 p-2 text-sm transition-colors hover:border-muted-foreground/20 hover:bg-accent/50"
-							exit={{ opacity: 0, y: -60 }}
+							exit={{ y: -60 }}
 							initial={{ opacity: 0, y: 60 }}
 							key={session.id}
 							layout
 							transition={{
 								layout: { duration: 0.4, ease: "easeInOut" },
-								opacity: { duration: 0.3 },
 								y: { duration: 0.4, ease: "easeOut" },
 							}}
 						>
@@ -385,7 +384,7 @@ const SessionsFeature = () => {
 								<div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-lg grayscale backdrop-blur-sm">
 									{session.flag}
 								</div>
-								<div className="flex flex-col gap-0.5">
+								<div className="flex flex-col gap-1">
 									<span className="font-medium font-mono text-secondary-foreground text-xs transition-colors group-hover:text-foreground">
 										{session.path}
 									</span>
@@ -457,7 +456,7 @@ const ErrorTrackingFeature = () => (
 				{[40, 70, 30, 80, 50, 90, 60, 40, 65, 85, 45, 75].map((h, i) => (
 					<motion.div
 						animate={{ height: `${h}%` }}
-						className="flex-1 rounded-t-[1px] bg-linear-to-t from-secondary to-muted-foreground transition-colors duration-300 hover:to-foreground"
+						className="flex-1 rounded-t-[1px] bg-accent-foreground transition-colors duration-300 hover:bg-accent-foreground/50"
 						initial={{ height: 0 }}
 						key={i}
 						transition={{ duration: 0.5, delay: i * 0.05 }}
@@ -675,44 +674,75 @@ const WebVitalsFeature = () => {
 };
 
 const CustomEventsFeature = () => {
-	const events = [
-		{ name: "checkout_completed", count: "2.4k" },
-		{ name: "add_to_cart", count: "8.9k" },
-		{ name: "video_played", count: "12k" },
-		{ name: "signup_started", count: "5.2k" },
-	];
+	const [events, setEvents] = useState([
+		{ name: "checkout_completed", count: "2.4k", id: "1" },
+		{ name: "add_to_cart", count: "8.9k", id: "2" },
+		{ name: "video_played", count: "12k", id: "3" },
+		{ name: "signup_started", count: "5.2k", id: "4" },
+		{ name: "button_clicked", count: "15k", id: "5" },
+		{ name: "form_submitted", count: "10k", id: "6" },
+		{ name: "link_clicked", count: "18k", id: "7" },
+		{ name: "search_performed", count: "9.5k", id: "8" },
+		{ name: "product_viewed", count: "13k", id: "9" },
+		{ name: "payment_successful", count: "7.8k", id: "10" },
+	]);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setEvents((prev) => {
+				const [first, ...rest] = prev;
+				// Generate new count and ID for cycling effect
+				const newCount = `${(Math.random() * 20).toFixed(1)}k`;
+				return [
+					...rest,
+					{ ...first, count: newCount, id: Math.random().toString() },
+				];
+			});
+		}, 2500);
+		return () => clearInterval(interval);
+	}, []);
 
 	return (
 		<div
-			className="max-h-[180px] space-y-2"
+			className="relative max-h-[180px] overflow-hidden"
 			style={{
-				maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
+				maskImage:
+					"linear-gradient(to bottom, transparent 0%, black 10%, black 70%, transparent 100%)",
 			}}
 		>
-			{events.map((event, i) => (
-				<motion.div
-					animate={{ opacity: 1, x: 0 }}
-					className="group flex items-center justify-between rounded-md border border-border/50 bg-secondary/50 p-2 text-xs transition-all hover:border-muted-foreground/20 hover:bg-accent/50"
-					initial={{ opacity: 0, x: -10 }}
-					key={i}
-					transition={{ duration: 0.3, delay: i * 0.1 }}
-				>
-					<div className="flex items-center gap-3">
-						<div className="rounded-md border border-border bg-background p-2 text-muted-foreground shadow-sm transition-colors group-hover:bg-accent group-hover:text-foreground">
-							<CursorClick className="size-3" weight="fill" />
-						</div>
-						<span className="font-mono text-muted-foreground transition-colors group-hover:text-foreground">
-							{event.name}
-						</span>
-					</div>
-					<Badge
-						className="border-0 bg-background/40 font-mono text-[10px] text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-secondary-foreground"
-						variant="secondary"
-					>
-						{event.count}
-					</Badge>
-				</motion.div>
-			))}
+			<div className="space-y-2">
+				<AnimatePresence initial={false} mode="popLayout">
+					{events.map((event) => (
+						<motion.div
+							animate={{ opacity: 1, y: 0 }}
+							className="group flex items-center justify-between rounded-md border border-border/50 bg-secondary/50 p-2 text-xs transition-colors hover:border-muted-foreground/20 hover:bg-accent/50"
+							exit={{ y: -60 }}
+							initial={{ opacity: 0, y: 60 }}
+							key={event.id}
+							layout
+							transition={{
+								layout: { duration: 0.4, ease: "easeInOut" },
+								y: { duration: 0.4, ease: "easeOut" },
+							}}
+						>
+							<div className="flex items-center gap-3">
+								<div className="rounded-md border border-border bg-background p-2 text-muted-foreground shadow-sm transition-colors group-hover:bg-accent group-hover:text-foreground">
+									<CursorClick className="size-3" weight="fill" />
+								</div>
+								<span className="font-mono text-muted-foreground transition-colors group-hover:text-foreground">
+									{event.name}
+								</span>
+							</div>
+							<Badge
+								className="border-0 bg-background/40 font-mono text-[10px] text-muted-foreground transition-colors group-hover:bg-accent group-hover:text-secondary-foreground"
+								variant="secondary"
+							>
+								{event.count}
+							</Badge>
+						</motion.div>
+					))}
+				</AnimatePresence>
+			</div>
 		</div>
 	);
 };
