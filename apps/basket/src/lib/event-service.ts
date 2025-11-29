@@ -4,8 +4,11 @@ import type {
 	CustomEvent,
 	CustomOutgoingLink,
 	ErrorEvent,
+	ErrorSpanRow,
 	WebVitalsEvent,
+	WebVitalsSpan,
 } from "@databuddy/db";
+import type { ErrorSpan, IndividualVital } from "@databuddy/validation";
 import { getGeo } from "../utils/ip-geo";
 import { parseUserAgent } from "../utils/user-agent";
 import {
@@ -471,6 +474,54 @@ export function insertErrorsBatch(events: ErrorEvent[]): Promise<void> {
 	});
 }
 
+/**
+ * Insert lean error spans (v2.x format)
+ */
+export async function insertErrorSpans(
+	errors: ErrorSpan[],
+	clientId: string
+): Promise<void> {
+	if (errors.length === 0) {
+		return;
+	}
+
+	const now = Date.now();
+	const spans: ErrorSpanRow[] = [];
+
+	for (const error of errors) {
+		// Use message hash as dedup key
+		const dedupKey = `error_${clientId}_${error.message.slice(0, 50)}_${error.path}`;
+		const isDuplicate = await checkDuplicate(dedupKey, "error");
+		if (isDuplicate) {
+			continue;
+		}
+
+		const errorSpan: ErrorSpanRow = {
+			client_id: clientId,
+			anonymous_id: sanitizeString(error.anonymousId, VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH),
+			session_id: validateSessionId(error.sessionId),
+			timestamp: typeof error.timestamp === "number" ? error.timestamp : now,
+			path: sanitizeString(error.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			message: sanitizeString(error.message, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			filename: sanitizeString(error.filename, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			lineno: error.lineno ?? undefined,
+			colno: error.colno ?? undefined,
+			stack: sanitizeString(error.stack, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			error_type: sanitizeString(error.errorType, VALIDATION_LIMITS.SHORT_STRING_MAX_LENGTH) || "Error",
+		};
+
+		spans.push(errorSpan);
+	}
+
+	if (spans.length > 0) {
+		try {
+			await sendEventBatch("analytics-error-spans", spans);
+		} catch (error) {
+			captureError(error, { count: spans.length });
+		}
+	}
+}
+
 export function insertWebVitalsBatch(events: WebVitalsEvent[]): Promise<void> {
 	return record("insertWebVitalsBatch", async () => {
 		if (events.length === 0) {
@@ -488,6 +539,54 @@ export function insertWebVitalsBatch(events: WebVitalsEvent[]): Promise<void> {
 			captureError(error, { count: events.length });
 		}
 	});
+}
+
+/**
+ * Insert individual vital metrics (v2.x format)
+ * Transforms and groups metrics before storing
+ */
+/**
+ * Insert individual vital metrics (v2.x format) as spans
+ * Each metric is stored as a separate row - no aggregation
+ */
+export async function insertIndividualVitals(
+	vitals: IndividualVital[],
+	clientId: string
+): Promise<void> {
+	if (vitals.length === 0) {
+		return;
+	}
+
+	const now = Date.now();
+	const spans: WebVitalsSpan[] = [];
+
+	for (const vital of vitals) {
+		// Dedup by client+session+path+metric
+		const dedupKey = `vital_${clientId}_${vital.sessionId}_${vital.path}_${vital.metricName}`;
+		const isDuplicate = await checkDuplicate(dedupKey, "web_vitals");
+		if (isDuplicate) {
+			continue;
+		}
+
+		const span: WebVitalsSpan = {
+			client_id: clientId,
+			session_id: validateSessionId(vital.sessionId),
+			timestamp: typeof vital.timestamp === "number" ? vital.timestamp : now,
+			path: sanitizeString(vital.path, VALIDATION_LIMITS.STRING_MAX_LENGTH),
+			metric_name: vital.metricName,
+			metric_value: vital.metricValue,
+		};
+
+		spans.push(span);
+	}
+
+	if (spans.length > 0) {
+		try {
+			await sendEventBatch("analytics-vitals-spans", spans);
+		} catch (error) {
+			captureError(error, { count: spans.length });
+		}
+	}
 }
 
 export function insertCustomEventsBatch(events: CustomEvent[]): Promise<void> {

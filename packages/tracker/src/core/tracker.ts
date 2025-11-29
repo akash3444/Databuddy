@@ -1,5 +1,5 @@
 import { HttpClient } from "./client";
-import type { BaseEvent, EventContext, TrackerOptions, WebVitalEvent } from "./types";
+import type { BaseEvent, ErrorSpan, EventContext, TrackerOptions, WebVitalEvent } from "./types";
 import { generateUUIDv4, logger } from "./utils";
 
 const HEADLESS_CHROME_REGEX = /\bHeadlessChrome\b/i;
@@ -38,6 +38,13 @@ export class BaseTracker {
 	vitalsTimer: Timer | null = null;
 	private isFlushingVitals = false;
 
+	// Errors Queue
+	errorsQueue: ErrorSpan[] = [];
+	errorsTimer: Timer | null = null;
+	private isFlushingErrors = false;
+
+	private readonly routeChangeCallbacks: Array<(path: string) => void> = [];
+
 	constructor(options: TrackerOptions) {
 		this.options = {
 			disabled: false,
@@ -48,7 +55,7 @@ export class BaseTracker {
 			initialRetryDelay: 500,
 			enableBatching: true,
 			batchSize: 10,
-			batchTimeout: 2000,
+			batchTimeout: 5000,
 			sdk: "web",
 			sdkVersion: "2.0.0",
 			...options,
@@ -448,6 +455,58 @@ export class BaseTracker {
 		}
 	}
 
+	sendError(error: ErrorSpan): Promise<void> {
+		if (this.shouldSkipTracking()) {
+			return Promise.resolve();
+		}
+
+		logger.log("Queueing error", error);
+		return this.addToErrorsQueue(error);
+	}
+
+	addToErrorsQueue(error: ErrorSpan): Promise<void> {
+		this.errorsQueue.push(error);
+		if (this.errorsTimer === null) {
+			this.errorsTimer = setTimeout(
+				() => this.flushErrors(),
+				this.options.batchTimeout
+			);
+		}
+		if (this.errorsQueue.length >= 10) {
+			this.flushErrors();
+		}
+		return Promise.resolve();
+	}
+
+	async flushErrors() {
+		if (this.errorsTimer) {
+			clearTimeout(this.errorsTimer);
+			this.errorsTimer = null;
+		}
+		if (this.errorsQueue.length === 0 || this.isFlushingErrors) {
+			return;
+		}
+
+		this.isFlushingErrors = true;
+		const errors = [...this.errorsQueue];
+		this.errorsQueue = [];
+
+		logger.log("Flushing errors", errors.length);
+
+		try {
+			const result = await this.api.fetch("/errors", errors, {
+				keepalive: true,
+			});
+			logger.log("Errors sent", result);
+			return result;
+		} catch (error) {
+			logger.error("Errors batch failed", error);
+			return null;
+		} finally {
+			this.isFlushingErrors = false;
+		}
+	}
+
 	sendBeacon(data: unknown, endpoint = "/vitals"): boolean {
 		if (this.isServer()) {
 			return false;
@@ -468,5 +527,31 @@ export class BaseTracker {
 
 	sendBatchBeacon(events: unknown[]): boolean {
 		return this.sendBeacon(events, "/batch");
+	}
+
+	/**
+	 * Register a callback to be called on route changes (for plugins)
+	 */
+	onRouteChange(callback: (path: string) => void): () => void {
+		this.routeChangeCallbacks.push(callback);
+		return () => {
+			const index = this.routeChangeCallbacks.indexOf(callback);
+			if (index > -1) {
+				this.routeChangeCallbacks.splice(index, 1);
+			}
+		};
+	}
+
+	/**
+	 * Notify all registered plugins of a route change
+	 */
+	notifyRouteChange(path: string): void {
+		for (const callback of this.routeChangeCallbacks) {
+			try {
+				callback(path);
+			} catch (error) {
+				logger.error("Route change callback error", error);
+			}
+		}
 	}
 }

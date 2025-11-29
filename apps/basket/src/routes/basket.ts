@@ -6,12 +6,18 @@ import type {
 	ErrorEvent,
 	WebVitalsEvent,
 } from "@databuddy/db";
+import {
+	batchedErrorsSchema,
+	batchedVitalsSchema,
+} from "@databuddy/validation";
 import { Elysia } from "elysia";
 import {
 	insertCustomEvent,
 	insertCustomEventsBatch,
 	insertError,
+	insertErrorSpans,
 	insertErrorsBatch,
+	insertIndividualVitals,
 	insertOutgoingLink,
 	insertOutgoingLinksBatch,
 	insertTrackEvent,
@@ -321,8 +327,8 @@ function processOutgoingLinkData(
 const app = new Elysia()
 	.post("/vitals", async (context) => {
 		const { body, query, request } = context as {
-			body: any;
-			query: any;
+			body: unknown;
+			query: Record<string, string>;
 			request: Request;
 		};
 
@@ -332,36 +338,33 @@ const app = new Elysia()
 				return validation.error;
 			}
 
-			const { clientId, userAgent, ip } = validation;
+			const { clientId, userAgent } = validation;
 
-			const [botError, parseResult] = await Promise.all([
-				checkForBot(request, body, query, clientId, userAgent),
-				validateEventSchema(
-					webVitalsEventSchema,
-					body,
-					request,
-					query,
-					clientId
-				),
-			]);
-
-			if (botError) {
-				return botError.error;
-			}
+			// v2.x tracker sends batched individual vital metrics to /vitals
+			const parseResult = batchedVitalsSchema.safeParse(body);
 
 			if (!parseResult.success) {
 				return createSchemaErrorResponse(parseResult.error.issues);
 			}
 
-			const vitalsEvent = await processWebVitalsEventData(
+			const botError = await checkForBot(
+				request,
 				body,
+				query,
 				clientId,
-				userAgent,
-				ip
+				userAgent
 			);
+			if (botError) {
+				return botError.error;
+			}
 
-			await insertWebVitals(vitalsEvent, clientId, userAgent, ip);
-			return { status: "success", type: "web_vitals" };
+			await insertIndividualVitals(parseResult.data, clientId);
+
+			return {
+				status: "success",
+				type: "web_vitals",
+				count: parseResult.data.length,
+			};
 		} catch (error) {
 			captureError(error, { message: "Error processing vitals" });
 			return { status: "error", message: "Internal server error" };
@@ -369,8 +372,8 @@ const app = new Elysia()
 	})
 	.post("/errors", async (context) => {
 		const { body, query, request } = context as {
-			body: any;
-			query: any;
+			body: unknown;
+			query: Record<string, string>;
 			request: Request;
 		};
 
@@ -380,38 +383,32 @@ const app = new Elysia()
 				return validation.error;
 			}
 
-			const { clientId, userAgent, ip } = validation;
+			const { clientId, userAgent } = validation;
 
-			if (FILTERED_ERROR_MESSAGES.has(body.message)) {
-				return {
-					status: "ignored",
-					type: "error",
-					reason: "filtered_message",
-				};
-			}
-
-			const [botError, parseResult] = await Promise.all([
-				checkForBot(request, body, query, clientId, userAgent),
-				validateEventSchema(errorEventSchema, body, request, query, clientId),
-			]);
-
-			if (botError) {
-				return botError.error;
-			}
+			const parseResult = batchedErrorsSchema.safeParse(body);
 
 			if (!parseResult.success) {
 				return createSchemaErrorResponse(parseResult.error.issues);
 			}
 
-			const errorEvent = await processErrorEventData(
+			const botError = await checkForBot(
+				request,
 				body,
+				query,
 				clientId,
-				userAgent,
-				ip
+				userAgent
 			);
+			if (botError) {
+				return botError.error;
+			}
 
-			await insertError(errorEvent, clientId, userAgent, ip);
-			return { status: "success", type: "error" };
+			await insertErrorSpans(parseResult.data, clientId);
+
+			return {
+				status: "success",
+				type: "error",
+				count: parseResult.data.length,
+			};
 		} catch (error) {
 			captureError(error, { message: "Error processing error" });
 			return { status: "error", message: "Internal server error" };

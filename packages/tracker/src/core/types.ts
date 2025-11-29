@@ -68,10 +68,26 @@ export type TrackEvent = BaseEvent & {
 
 export type WebVitalMetricName = "FCP" | "LCP" | "CLS" | "INP" | "TTFB" | "FPS";
 
-export type WebVitalEvent = BaseEvent & {
-	name: "web_vital";
+export type WebVitalEvent = {
+	timestamp: number;
+	path: string;
 	metricName: WebVitalMetricName;
 	metricValue: number;
+	anonymousId?: string;
+	sessionId?: string;
+};
+
+export type ErrorSpan = {
+	timestamp: number;
+	path: string;
+	message: string;
+	filename?: string;
+	lineno?: number;
+	colno?: number;
+	stack?: string;
+	errorType: string;
+	anonymousId?: string;
+	sessionId?: string;
 };
 
 export type DatabuddyGlobal = {

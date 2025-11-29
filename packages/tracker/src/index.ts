@@ -127,6 +127,11 @@ export class Databuddy extends BaseTracker {
 					return;
 				}
 			}
+
+			if (this.lastPath) {
+				this.notifyRouteChange(window.location.pathname);
+			}
+
 			this.lastPath = url;
 			this.pageCount += 1;
 			this.track("screen_view", {

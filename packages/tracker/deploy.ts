@@ -13,8 +13,8 @@ program
 	.option("-y, --yes", "Skip confirmation prompt")
 	.option("-f, --force", "Force upload even if hash matches")
 	.option("-m, --message <text>", "Add a note to the deployment notification")
-	.option("--skip-notification", "Skip sending Discord notification")
-	.option("--skip-tests", "Skip running E2E tests before deployment")
+	.option("-s, --skip-notification", "Skip sending Discord notification")
+	.option("-t, --skip-tests", "Skip running E2E tests before deployment")
 	.option("-p, --purge", "Only purge cache, skip deployment")
 	.option("-v, --verbose", "Enable verbose logging")
 	.parse(process.argv);

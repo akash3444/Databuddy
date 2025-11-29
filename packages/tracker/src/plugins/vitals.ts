@@ -8,20 +8,35 @@ type FPSMetric = {
 	value: number;
 };
 
+const PER_ROUTE_METRICS: WebVitalMetricName[] = ["CLS", "INP", "FPS"];
+
+let activeFPSMeasurement: { cancelled: boolean } | null = null;
+
 const onFPS = (callback: (metric: FPSMetric) => void) => {
 	if (typeof window === "undefined") {
 		return;
 	}
+
+	if (activeFPSMeasurement) {
+		activeFPSMeasurement.cancelled = true;
+	}
+
+	const measurement = { cancelled: false };
+	activeFPSMeasurement = measurement;
 
 	let frames = 0;
 	const start = performance.now();
 	const duration = 2000;
 
 	const countFrame = () => {
+		if (measurement.cancelled) {
+			return;
+		}
 		frames += 1;
 		if (performance.now() - start < duration) {
 			requestAnimationFrame(countFrame);
 		} else {
+			activeFPSMeasurement = null;
 			callback({ name: "FPS", value: Math.round((frames / duration) * 1000) });
 		}
 	};
@@ -51,8 +66,6 @@ export function initWebVitalsTracking(tracker: BaseTracker) {
 		logger.log(`Web Vital captured: ${name}`, value);
 
 		tracker.sendVital({
-			name: "web_vital",
-			eventId: crypto.randomUUID(),
 			timestamp: Date.now(),
 			path: window.location.pathname,
 			metricName: name,
@@ -62,8 +75,21 @@ export function initWebVitalsTracking(tracker: BaseTracker) {
 
 	onFCP(handleMetric);
 	onLCP(handleMetric);
+	onTTFB(handleMetric);
+
 	onCLS(handleMetric);
 	onINP(handleMetric);
-	onTTFB(handleMetric);
 	onFPS(handleMetric);
+
+	tracker.onRouteChange(() => {
+		tracker.flushVitals();
+
+		for (const metric of PER_ROUTE_METRICS) {
+			sentMetrics.delete(metric);
+		}
+
+		onFPS(handleMetric);
+
+		logger.log("Vitals reset for new route, per-route metrics cleared");
+	});
 }

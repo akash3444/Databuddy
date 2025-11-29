@@ -78,6 +78,7 @@ ORDER BY (client_id, time, id)
 SETTINGS index_granularity = 8192
 `;
 
+// Legacy table - keeping for backwards compatibility during migration
 const CREATE_ERRORS_TABLE = `
 CREATE TABLE IF NOT EXISTS ${ANALYTICS_DATABASE}.errors (
   id UUID,
@@ -112,6 +113,34 @@ CREATE TABLE IF NOT EXISTS ${ANALYTICS_DATABASE}.errors (
 PARTITION BY toYYYYMM(timestamp)
 ORDER BY (client_id, timestamp, id)
 SETTINGS index_granularity = 8192
+`;
+
+/**
+ * Lean error spans table - minimal structure
+ * No geo/UA enrichment, just the error data
+ */
+const CREATE_ERROR_SPANS_TABLE = `
+CREATE TABLE IF NOT EXISTS ${ANALYTICS_DATABASE}.error_spans (
+  client_id String CODEC(ZSTD(1)),
+  anonymous_id String CODEC(ZSTD(1)),
+  session_id String CODEC(ZSTD(1)),
+  
+  timestamp DateTime64(3, 'UTC') CODEC(Delta(8), ZSTD(1)),
+  path String CODEC(ZSTD(1)),
+  
+  message String CODEC(ZSTD(1)),
+  filename Nullable(String) CODEC(ZSTD(1)),
+  lineno Nullable(Int32) CODEC(ZSTD(1)),
+  colno Nullable(Int32) CODEC(ZSTD(1)),
+  stack Nullable(String) CODEC(ZSTD(1)),
+  error_type LowCardinality(String) CODEC(ZSTD(1)),
+  
+  INDEX idx_session_id session_id TYPE bloom_filter(0.01) GRANULARITY 1,
+  INDEX idx_error_type error_type TYPE bloom_filter(0.01) GRANULARITY 1
+) ENGINE = MergeTree
+PARTITION BY toDate(timestamp)
+ORDER BY (client_id, error_type, path, timestamp)
+SETTINGS index_granularity = 8192, ttl_only_drop_parts = 1
 `;
 
 // Legacy table - keeping for backwards compatibility during migration
@@ -382,6 +411,7 @@ ORDER BY (client_id, timestamp, id)
 SETTINGS index_granularity = 8192
 `;
 
+// Legacy type - keeping for backwards compatibility
 export type ErrorEvent = {
 	id: string;
 	client_id: string;
@@ -406,6 +436,23 @@ export type ErrorEvent = {
 	country?: string;
 	region?: string;
 	created_at: number;
+}
+
+/**
+ * Lean error span - no geo/UA enrichment
+ */
+export type ErrorSpanRow = {
+	client_id: string;
+	anonymous_id: string;
+	session_id: string;
+	timestamp: number;
+	path: string;
+	message: string;
+	filename?: string;
+	lineno?: number;
+	colno?: number;
+	stack?: string;
+	error_type: string;
 }
 
 // Legacy interface - keeping for backwards compatibility
@@ -687,6 +734,7 @@ export async function initClickHouseSchema() {
 		const tables = [
 			{ name: "events", query: CREATE_EVENTS_TABLE },
 			{ name: "errors", query: CREATE_ERRORS_TABLE },
+			{ name: "error_spans", query: CREATE_ERROR_SPANS_TABLE },
 			{ name: "web_vitals", query: CREATE_WEB_VITALS_TABLE },
 			{ name: "web_vitals_spans", query: CREATE_WEB_VITALS_SPANS_TABLE },
 			{ name: "web_vitals_hourly", query: CREATE_WEB_VITALS_HOURLY_TABLE },
