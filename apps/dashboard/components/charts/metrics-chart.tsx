@@ -265,7 +265,7 @@ export function MetricsChart({
 		}
 	};
 
-	const handleCreateAnnotation = (annotation: {
+	const handleCreateAnnotation = async (annotation: {
 		annotationType: "range";
 		xValue: string;
 		xEndValue: string;
@@ -275,8 +275,9 @@ export function MetricsChart({
 		isPublic: boolean;
 	}) => {
 		if (onCreateAnnotation) {
-			onCreateAnnotation(annotation);
+			await onCreateAnnotation(annotation);
 		}
+		setShowRangePopup(false);
 	};
 
 	if (isLoading) {
@@ -603,7 +604,7 @@ export function MetricsChart({
 			{showRangePopup && selectedDateRange && (
 				<RangeSelectionPopup
 					dateRange={selectedDateRange}
-					isOpen={showRangePopup} // Position is handled by modal overlay
+					isOpen={showRangePopup}
 					onCloseAction={() => setShowRangePopup(false)}
 					onCreateAnnotationAction={handleCreateAnnotation}
 					onZoomAction={handleZoom}

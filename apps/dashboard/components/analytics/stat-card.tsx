@@ -308,44 +308,51 @@ export function StatCard({
 		return (
 			<HoverCard>
 				<HoverCardTrigger asChild>{cardContent}</HoverCardTrigger>
-				<HoverCardContent className="w-72" sideOffset={8}>
-					<div className="space-y-3">
-						<div className="flex items-center gap-2">
-							{Icon && <Icon className="size-4 text-muted-foreground" />}
-							<span className="font-medium text-foreground text-sm">
-								{title}
-							</span>
-						</div>
-						<div className="grid grid-cols-2 gap-3">
-							<div>
-								<p className="mb-0.5 text-muted-foreground text-xs">Previous</p>
-								<p className="text-[10px] text-muted">
-									{dayjs(trend.previousPeriod.start).format("MMM D")} –{" "}
-									{dayjs(trend.previousPeriod.end).format("MMM D")}
-								</p>
-								<p className="font-semibold text-foreground">
-									{formatTrendValue(trend.previous, formatValue)}
-								</p>
+				<HoverCardContent className="w-64 p-0" sideOffset={8}>
+					{/* Header */}
+					<div className="flex items-center gap-2.5 border-b bg-accent px-3 py-2.5">
+						{Icon && (
+							<div className="flex size-7 items-center justify-center rounded bg-background">
+								<Icon className="size-4 text-muted-foreground" />
 							</div>
-							<div>
-								<p className="mb-0.5 text-muted-foreground text-xs">Current</p>
-								<p className="text-[10px] text-muted">
-									{dayjs(trend.currentPeriod.start).format("MMM D")} –{" "}
-									{dayjs(trend.currentPeriod.end).format("MMM D")}
-								</p>
-								<p className="font-semibold text-foreground">
-									{formatTrendValue(trend.current, formatValue)}
-								</p>
-							</div>
+						)}
+						<span className="font-semibold text-foreground text-sm">
+							{title}
+						</span>
+					</div>
+
+					{/* Comparison */}
+					<div className="grid grid-cols-2 divide-x">
+						<div className="p-3">
+							<p className="text-muted-foreground text-xs">Previous</p>
+							<p className="mt-1 font-semibold text-foreground text-lg tabular-nums">
+								{formatTrendValue(trend.previous, formatValue)}
+							</p>
+							<p className="mt-0.5 text-[10px] text-muted">
+								{dayjs(trend.previousPeriod.start).format("MMM D")} –{" "}
+								{dayjs(trend.previousPeriod.end).format("MMM D")}
+							</p>
 						</div>
-						<div className="flex items-center justify-between border-t pt-2">
-							<span className="text-muted-foreground text-xs">Change</span>
-							<TrendIndicator
-								className="text-xs"
-								invertColor={invertTrend}
-								value={trend.change || 0}
-							/>
+						<div className="p-3">
+							<p className="text-muted-foreground text-xs">Current</p>
+							<p className="mt-1 font-semibold text-foreground text-lg tabular-nums">
+								{formatTrendValue(trend.current, formatValue)}
+							</p>
+							<p className="mt-0.5 text-[10px] text-muted">
+								{dayjs(trend.currentPeriod.start).format("MMM D")} –{" "}
+								{dayjs(trend.currentPeriod.end).format("MMM D")}
+							</p>
 						</div>
+					</div>
+
+					{/* Footer */}
+					<div className="flex items-center justify-between border-t bg-accent px-3 py-2">
+						<span className="text-muted-foreground text-xs">Change</span>
+						<TrendIndicator
+							className="text-sm"
+							invertColor={invertTrend}
+							value={trend.change || 0}
+						/>
 					</div>
 				</HoverCardContent>
 			</HoverCard>
