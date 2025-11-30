@@ -8,7 +8,7 @@ import { GeneralSettings } from "../components/general-settings";
 function PageSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="space-y-6 border-b p-5 lg:border-r lg:border-b-0">
+			<div className="space-y-6 border-b p-5 lg:border-b-0">
 				{/* Logo */}
 				<div className="flex items-center gap-3">
 					<Skeleton className="h-16 w-16 rounded-full" />

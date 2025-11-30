@@ -33,7 +33,7 @@ function SkeletonRow() {
 function WebsitesSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="divide-y border-b lg:border-r lg:border-b-0">
+			<div className="divide-y border-b lg:border-b-0">
 				<SkeletonRow />
 				<SkeletonRow />
 				<SkeletonRow />
@@ -140,7 +140,7 @@ export function WebsiteSettings({
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 			{/* Websites List */}
-			<div className="flex flex-col border-b lg:border-r lg:border-b-0">
+			<div className="flex flex-col border-b lg:border-b-0">
 				<div className="flex-1 divide-y overflow-y-auto">
 					{websites.map((website) => (
 						<WebsiteRow key={website.id} website={website} />

@@ -61,7 +61,7 @@ export function GeneralSettings({
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 			{/* Main Content */}
-			<div className="flex flex-col border-b lg:border-r lg:border-b-0">
+			<div className="flex flex-col border-b lg:border-b-0">
 				<div className="flex-1 space-y-6 p-5">
 					{/* Logo Section */}
 					<OrganizationLogoUploader organization={organization} />

@@ -89,7 +89,7 @@ export function DangerZoneSettings({
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 			{/* Main Content */}
-			<div className="flex flex-col gap-6 border-b p-5 lg:border-r lg:border-b-0">
+			<div className="flex flex-col gap-6 border-b p-5 lg:border-b-0">
 				{/* Transfer Assets Section */}
 				<section>
 					<div className="mb-6">

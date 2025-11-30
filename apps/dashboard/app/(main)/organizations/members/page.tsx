@@ -22,7 +22,7 @@ function SkeletonRow() {
 function PageSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="divide-y border-b lg:border-r lg:border-b-0">
+			<div className="divide-y border-b lg:border-b-0">
 				<SkeletonRow />
 				<SkeletonRow />
 				<SkeletonRow />

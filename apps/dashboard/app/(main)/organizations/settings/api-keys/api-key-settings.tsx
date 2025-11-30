@@ -34,7 +34,7 @@ function SkeletonRow() {
 function ApiKeysSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="divide-y border-b lg:border-r lg:border-b-0">
+			<div className="divide-y border-b lg:border-b-0">
 				<SkeletonRow />
 				<SkeletonRow />
 				<SkeletonRow />
@@ -84,7 +84,7 @@ export function ApiKeySettings({ organization }: ApiKeySettingsProps) {
 		<>
 			<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 				{/* Keys List / Empty State */}
-				<div className="flex flex-col border-b lg:border-r lg:border-b-0">
+				<div className="flex flex-col border-b lg:border-b-0">
 					{isEmpty ? (
 						<EmptyState
 							description="Create your first API key to start integrating with our platform"

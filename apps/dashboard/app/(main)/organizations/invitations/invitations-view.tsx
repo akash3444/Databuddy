@@ -38,7 +38,7 @@ function SkeletonRow() {
 function InvitationsSkeleton() {
 	return (
 		<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
-			<div className="border-b lg:border-r lg:border-b-0">
+			<div className="border-b lg:border-b-0">
 				<div className="flex gap-4 border-b px-5 py-3">
 					<Skeleton className="h-8 w-24" />
 					<Skeleton className="h-8 w-24" />
@@ -174,7 +174,7 @@ export function InvitationsView({
 		<>
 			<div className="h-full lg:grid lg:grid-cols-[1fr_18rem]">
 				{/* Main Content */}
-				<div className="flex flex-col border-b lg:border-r lg:border-b-0">
+				<div className="flex flex-col border-b lg:border-b-0">
 					<Tabs
 						className="flex h-full flex-col"
 						onValueChange={setTab}
