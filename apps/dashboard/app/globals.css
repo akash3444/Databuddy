@@ -107,6 +107,14 @@
 
 /* Angled Rectangle Gradient - Modal footer */
 @utility angled-rectangle-gradient {
+  position: relative;
+  isolation: isolate;
+}
+
+.angled-rectangle-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background-image: repeating-linear-gradient(
     -50deg,
     rgba(50, 50, 50, 0.1) 0px,
@@ -114,9 +122,12 @@
     transparent 1px,
     transparent 5px
   );
+  pointer-events: none;
+  z-index: -1;
+  border-radius: inherit;
 }
 
-.dark .angled-rectangle-gradient {
+.dark .angled-rectangle-gradient::before {
   background-image: repeating-linear-gradient(
     -50deg,
     rgba(255, 255, 255, 0.08) 0px,

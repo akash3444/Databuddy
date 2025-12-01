@@ -42,10 +42,6 @@ function WebsiteDetailsPage() {
 
 	const { data, isLoading, isError } = useWebsite(id as string);
 
-	const { isTrackingSetup, isTrackingSetupLoading } = useTrackingSetup(
-		id as string
-	);
-
 	const addFilter = useCallback(
 		(filter: DynamicQueryFilter) => {
 			addFilterAction(filter);
@@ -92,18 +88,10 @@ function WebsiteDetailsPage() {
 		);
 	}
 
-	if (isLoading || isTrackingSetupLoading || isTrackingSetup === null) {
+	if (isLoading === null) {
 		return (
 			<div className="p-4">
 				<TabLoadingSkeleton />
-			</div>
-		);
-	}
-
-	if (isTrackingSetup === false) {
-		return (
-			<div className="p-4">
-				<WebsiteTrackingSetupTab {...settingsProps} />
 			</div>
 		);
 	}
