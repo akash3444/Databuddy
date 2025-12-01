@@ -1,7 +1,7 @@
 import { ChartLineIcon, XIcon } from "@phosphor-icons/react";
 import dayjs from "dayjs";
 import { useAtom } from "jotai";
-import { useMemo, useState } from "react";
+import { useRef, useState } from "react";
 import {
 	Area,
 	CartesianGrid,
@@ -41,7 +41,33 @@ import {
 import { RangeSelectionPopup } from "./range-selection-popup";
 import { SkeletonChart } from "./skeleton-chart";
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type TooltipPayloadEntry = {
+	dataKey: string;
+	value: number;
+	color: string;
+	payload: Record<string, unknown>;
+};
+
+type TooltipProps = {
+	active?: boolean;
+	payload?: TooltipPayloadEntry[];
+	label?: string;
+	isDragging?: boolean;
+	justFinishedDragging?: boolean;
+};
+
+const CustomTooltip = ({
+	active,
+	payload,
+	label,
+	isDragging,
+	justFinishedDragging,
+}: TooltipProps) => {
+	// Hide tooltip during or immediately after dragging
+	if (isDragging || justFinishedDragging) {
+		return null;
+	}
+
 	if (!(active && payload?.length)) {
 		return null;
 	}
@@ -54,23 +80,26 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 			</div>
 			<div className="space-y-1.5">
 				{Object.entries(
-					payload.reduce((groups: any, entry: any) => {
-						const key = entry.dataKey
-							.replace("_historical", "")
-							.replace("_future", "");
-						if (!groups[key] || entry.dataKey.includes("_future")) {
-							groups[key] = entry;
-						}
-						return groups;
-					}, {})
-				).map(([key, entry]: [string, any]) => {
+					payload.reduce<Record<string, TooltipPayloadEntry>>(
+						(groups, entry) => {
+							const key = entry.dataKey
+								.replace("_historical", "")
+								.replace("_future", "");
+							if (!groups[key] || entry.dataKey.includes("_future")) {
+								groups[key] = entry;
+							}
+							return groups;
+						},
+						{}
+					)
+				).map(([key, entry]) => {
 					const metric = METRICS.find((m) => m.key === key);
-					if (!metric) {
+					if (!metric || entry.value === undefined || entry.value === null) {
 						return null;
 					}
 
 					const value = metric.formatValue
-						? metric.formatValue(entry.value, entry.payload)
+						? metric.formatValue(entry.value, entry.payload as ChartDataRow)
 						: entry.value.toLocaleString();
 
 					return (
@@ -128,6 +157,14 @@ type MetricsChartProps = {
 	granularity?: "hourly" | "daily" | "weekly" | "monthly";
 };
 
+const DEFAULT_METRICS = [
+	"pageviews",
+	"visitors",
+	"sessions",
+	"bounce_rate",
+	"avg_session_duration",
+];
+
 export function MetricsChart({
 	data,
 	isLoading,
@@ -154,6 +191,11 @@ export function MetricsChart({
 	const [selectedDateRange, setSelectedDateRange] =
 		useState<DateRangeState | null>(null);
 
+	// Track drag state to prevent tooltip from showing during/after drag
+	const isDraggingRef = useRef(false);
+	const [suppressTooltip, setSuppressTooltip] = useState(false);
+	const hasAnimatedRef = useRef(false);
+
 	const [tipDismissed, setTipDismissed] = usePersistentState(
 		websiteId
 			? ANNOTATION_STORAGE_KEYS.tipDismissed(websiteId)
@@ -164,21 +206,9 @@ export function MetricsChart({
 	const [visibleMetrics] = useAtom(metricVisibilityAtom);
 	const [, toggleMetric] = useAtom(toggleMetricAtom);
 
-	const hiddenMetrics = useMemo(
-		() =>
-			Object.fromEntries(
-				Object.entries(visibleMetrics).map(([key, visible]) => [key, !visible])
-			),
-		[visibleMetrics]
+	const hiddenMetrics = Object.fromEntries(
+		Object.entries(visibleMetrics).map(([key, visible]) => [key, !visible])
 	);
-
-	const DEFAULT_METRICS = [
-		"pageviews",
-		"visitors",
-		"sessions",
-		"bounce_rate",
-		"avg_session_duration",
-	];
 
 	const metrics = metricsFilter
 		? METRICS.filter(metricsFilter)
@@ -190,9 +220,7 @@ export function MetricsChart({
 
 		const result = { ...item };
 		for (const metric of metrics) {
-			result[`${metric.key}_historical`] = isLastPoint
-				? null
-				: item[metric.key];
+			result[`${metric.key}_historical`] = isLastPoint ? null : item[metric.key];
 			if (isLastPoint || isSecondToLast) {
 				result[`${metric.key}_future`] = item[metric.key];
 			}
@@ -200,33 +228,34 @@ export function MetricsChart({
 		return result;
 	});
 
-	const handleMouseDown = (e: any) => {
-		if (!e?.activeLabel) {
-			return;
-		}
+	const handleMouseDown = (e: { activeLabel?: string }) => {
+		if (!e?.activeLabel) return;
+		isDraggingRef.current = true;
+		setSuppressTooltip(true);
 		setRefAreaLeft(e.activeLabel);
 		setRefAreaRight(null);
 	};
 
-	const handleMouseMove = (e: any) => {
-		if (!(refAreaLeft && e?.activeLabel)) {
-			return;
-		}
+	const handleMouseMove = (e: { activeLabel?: string }) => {
+		if (!(refAreaLeft && e?.activeLabel)) return;
 		setRefAreaRight(e.activeLabel);
 	};
 
-	const handleMouseUp = (e: any) => {
-		if (!e?.activeLabel) {
-			return;
+	const handleMouseUp = (e: { activeLabel?: string }) => {
+		const wasDragging = isDraggingRef.current;
+		isDraggingRef.current = false;
+
+		if (wasDragging) {
+			setTimeout(() => setSuppressTooltip(false), 150);
 		}
-		if (!refAreaLeft) {
+
+		if (!e?.activeLabel || !refAreaLeft) {
 			setRefAreaLeft(null);
 			setRefAreaRight(null);
 			return;
 		}
 
 		const rightBoundary = refAreaRight || refAreaLeft;
-
 		const leftIndex = chartData.findIndex((d) => d.date === refAreaLeft);
 		const rightIndex = chartData.findIndex((d) => d.date === rightBoundary);
 
@@ -237,37 +266,25 @@ export function MetricsChart({
 		}
 
 		const [startIndex, endIndex] =
-			leftIndex < rightIndex
-				? [leftIndex, rightIndex]
-				: [rightIndex, leftIndex];
+			leftIndex < rightIndex ? [leftIndex, rightIndex] : [rightIndex, leftIndex];
 
 		const startDateStr =
-			(chartData[startIndex] as any).rawDate || chartData[startIndex].date;
+			(chartData[startIndex] as ChartDataRow & { rawDate?: string }).rawDate ||
+			chartData[startIndex].date;
 		const endDateStr =
-			(chartData[endIndex] as any).rawDate || chartData[endIndex].date;
+			(chartData[endIndex] as ChartDataRow & { rawDate?: string }).rawDate ||
+			chartData[endIndex].date;
 
-		const startDate = dayjs(startDateStr).toDate();
-		const endDate = dayjs(endDateStr).toDate();
-
-		const dateRange = {
-			startDate,
-			endDate,
-		};
-
-		setSelectedDateRange(dateRange);
+		setSelectedDateRange({
+			startDate: dayjs(startDateStr).toDate(),
+			endDate: dayjs(endDateStr).toDate(),
+		});
 		setShowRangePopup(true);
-
 		setRefAreaLeft(null);
 		setRefAreaRight(null);
 	};
 
-	const handleZoom = (dateRange: DateRangeState) => {
-		if (onRangeSelect) {
-			onRangeSelect(dateRange);
-		}
-	};
-
-	const handleCreateAnnotation = async (annotation: {
+	const handleInternalCreateAnnotation = async (annotation: {
 		annotationType: "range";
 		xValue: string;
 		xEndValue: string;
@@ -276,9 +293,7 @@ export function MetricsChart({
 		color: string;
 		isPublic: boolean;
 	}) => {
-		if (onCreateAnnotation) {
-			await onCreateAnnotation(annotation);
-		}
+		await onCreateAnnotation?.(annotation);
 		setShowAnnotationModal(false);
 	};
 
@@ -438,12 +453,21 @@ export function MetricsChart({
 								width={45}
 							/>
 							<Tooltip
-								content={<CustomTooltip />}
-								cursor={{
-									stroke: "var(--color-primary)",
-									strokeDasharray: "4 4",
-									strokeOpacity: 0.5,
-								}}
+								content={
+									<CustomTooltip
+										isDragging={isDraggingRef.current}
+										justFinishedDragging={suppressTooltip}
+									/>
+								}
+								cursor={
+									suppressTooltip
+										? false
+										: {
+												stroke: "var(--color-primary)",
+												strokeDasharray: "4 4",
+												strokeOpacity: 0.5,
+											}
+								}
 							/>
 							{refAreaLeft && refAreaRight && (
 								<ReferenceArea
@@ -572,12 +596,20 @@ export function MetricsChart({
 							)}
 							{metrics.map((metric) => (
 								<Area
-									activeDot={{ r: 4, stroke: metric.color, strokeWidth: 2 }}
+									activeDot={
+										suppressTooltip
+											? false
+											: { r: 4, stroke: metric.color, strokeWidth: 2 }
+									}
 									dataKey={`${metric.key}_historical`}
 									fill={`url(#gradient-${metric.gradient})`}
 									hide={hiddenMetrics[metric.key]}
+									isAnimationActive={!hasAnimatedRef.current}
 									key={metric.key}
 									name={metric.label}
+									onAnimationEnd={() => {
+										hasAnimatedRef.current = true;
+									}}
 									stroke={metric.color}
 									strokeWidth={2.5}
 									type="monotone"
@@ -590,6 +622,7 @@ export function MetricsChart({
 									dot={false}
 									fill={`url(#gradient-${metric.gradient})`}
 									hide={hiddenMetrics[metric.key]}
+									isAnimationActive={!hasAnimatedRef.current}
 									key={`future-${metric.key}`}
 									legendType="none"
 									stroke={metric.color}
@@ -614,7 +647,7 @@ export function MetricsChart({
 						setShowAnnotationModal(true);
 					}}
 					onCloseAction={() => setShowRangePopup(false)}
-					onZoomAction={handleZoom}
+					onZoomAction={onRangeSelect ?? (() => {})}
 				/>
 			)}
 
@@ -624,7 +657,7 @@ export function MetricsChart({
 					isOpen={showAnnotationModal}
 					mode="create"
 					onClose={() => setShowAnnotationModal(false)}
-					onCreate={handleCreateAnnotation}
+					onCreate={handleInternalCreateAnnotation}
 				/>
 			)}
 		</div>
