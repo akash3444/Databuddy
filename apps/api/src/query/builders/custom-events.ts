@@ -261,6 +261,7 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 			filterConditions?: string[],
 			filterParams?: Record<string, Filter["value"]>
 		) => {
+			const limit = _limit ?? 1000;
 			const combinedWhereClause = filterConditions?.length
 				? `AND ${filterConditions.join(" AND ")}`
 				: "";
@@ -281,11 +282,13 @@ export const CustomEventsBuilders: Record<string, SimpleQueryConfig> = {
 						${combinedWhereClause}
 					GROUP BY toDate(timestamp)
 					ORDER BY date ASC
+					LIMIT {limit:UInt32}
 				`,
 				params: {
 					websiteId,
 					startDate,
 					endDate,
+					limit,
 					...filterParams,
 				},
 			};

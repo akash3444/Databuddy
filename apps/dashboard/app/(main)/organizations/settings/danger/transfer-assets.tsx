@@ -224,7 +224,7 @@ export function TransferAssets({ organizationId }: TransferAssetsProps) {
 						({organizationWebsites.length})
 					</span>
 				</div>
-				<div className="flex-1 space-y-1 overflow-y-auto">
+				<div className="flex-1 space-y-2 overflow-y-auto">
 					{organizationWebsites.length > 0 ? (
 						organizationWebsites.map((website) => (
 							<WebsiteItem

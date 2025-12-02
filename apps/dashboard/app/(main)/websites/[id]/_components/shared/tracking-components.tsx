@@ -302,17 +302,17 @@ export function TrackingStatusCard({
 	return (
 		<NoticeBanner
 			className="w-full"
+			description={
+				isSetup
+					? "Data is being collected successfully"
+					: "Install the tracking script to start collecting data"
+			}
 			icon={
 				isSetup ? (
 					<CheckIcon className="size-4" weight="duotone" />
 				) : (
 					<WarningCircleIcon className="size-4" weight="duotone" />
 				)
-			}
-			subtitle={
-				isSetup
-					? "Data is being collected successfully"
-					: "Install the tracking script to start collecting data"
 			}
 			title={isSetup ? "Tracking Active" : "Tracking Not Setup"}
 		>

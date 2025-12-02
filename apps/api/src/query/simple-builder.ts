@@ -59,7 +59,7 @@ const DANGEROUS_SQL_KEYWORDS = [
 const SQL_EXPRESSIONS = {
 	normalizedPath: Expressions.path.normalized as string,
 	normalizedReferrer: Expressions.referrer.normalized as string,
-	queryString: "queryString(path)" as string,
+	queryString: "queryString(url)" as string,
 } as const;
 
 const REFERRER_MAPPINGS: Record<string, string> = {

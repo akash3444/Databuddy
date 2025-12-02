@@ -214,16 +214,16 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
 						COUNT(*) as measurements
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
+					INNER JOIN ${Analytics.events} e ON (
 						wv.session_id = e.session_id 
 						AND wv.client_id = e.client_id
 						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
+						AND e.browser_name != ''
 					)
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.browser_name != ''
 					GROUP BY e.browser_name
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}
@@ -341,7 +341,7 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 			return {
 				sql: `
 					SELECT 
-						CONCAT(any(e.region), ', ', any(e.country)) as name,
+						CONCAT(e.region, ', ', e.country) as name,
 						COUNT(DISTINCT wv.anonymous_id) as visitors,
 						avgIf(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as avg_fcp,
 						quantileIf(0.50)(wv.metric_value, wv.metric_name = 'FCP' AND wv.metric_value > 0) as p50_fcp,
@@ -353,16 +353,16 @@ export const PerformanceBuilders: Record<string, SimpleQueryConfig> = {
 						avgIf(wv.metric_value, wv.metric_name = 'TTFB' AND wv.metric_value > 0) as avg_ttfb,
 						COUNT(*) as measurements
 					FROM ${Analytics.web_vitals_spans} wv
-					LEFT JOIN ${Analytics.events} e ON (
+					INNER JOIN ${Analytics.events} e ON (
 						wv.session_id = e.session_id 
 						AND wv.client_id = e.client_id
 						AND abs(dateDiff('second', wv.timestamp, e.time)) < 60
+						AND e.region != ''
 					)
 					WHERE 
 						wv.client_id = {websiteId:String}
 						AND wv.timestamp >= toDateTime({startDate:String})
 						AND wv.timestamp <= toDateTime(concat({endDate:String}, ' 23:59:59'))
-						AND e.region != ''
 					GROUP BY e.region, e.country
 					ORDER BY p50_lcp DESC
 					LIMIT {limit:UInt32}

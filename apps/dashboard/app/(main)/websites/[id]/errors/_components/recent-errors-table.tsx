@@ -28,9 +28,9 @@ import {
 
 dayjs.extend(relativeTime);
 
-interface Props {
+type Props = {
 	recentErrors: RecentError[];
-}
+};
 
 const SeverityDot = ({ severity }: { severity: "high" | "medium" | "low" }) => {
 	const colors = {
@@ -49,7 +49,9 @@ const SeverityDot = ({ severity }: { severity: "high" | "medium" | "low" }) => {
 
 const getRelativeTime = (timestamp: string): string => {
 	const date = dayjs(timestamp);
-	if (!date.isValid()) return "";
+	if (!date.isValid()) {
+		return "";
+	}
 	return date.fromNow();
 };
 
@@ -138,7 +140,7 @@ export const RecentErrorsTable = ({ recentErrors }: Props) => {
 			header: "Page",
 			cell: (info: { getValue: () => unknown }) => {
 				const url = info.getValue() as string;
-				let pathname = url;
+				let pathname: string;
 				try {
 					pathname = url.startsWith("http") ? new URL(url).pathname : url;
 				} catch {

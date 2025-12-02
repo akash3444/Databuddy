@@ -3,6 +3,7 @@ import type {
 	BlockedTraffic,
 	CustomEventSpan,
 	CustomEventsHourlyAggregate,
+	CustomOutgoingLink,
 	ErrorHourlyAggregate,
 	ErrorSpanRow,
 	WebVitalsHourlyAggregate,
@@ -32,4 +33,5 @@ export type TableFieldsMap = {
 	"analytics.custom_event_spans": keyof CustomEventSpan;
 	"analytics.custom_events_hourly": keyof CustomEventsHourlyAggregate;
 	"analytics.blocked_traffic": keyof BlockedTraffic;
+	"analytics.outgoing_links": keyof CustomOutgoingLink;
 };
