@@ -79,6 +79,33 @@ export async function updateUserProfile(formData: FormData) {
 }
 
 /**
+ * Sets a password for OAuth users who don't have one
+ * Required before they can enable 2FA
+ */
+export async function setPasswordForOAuthUser(newPassword: string) {
+	const currentUser = await getUser();
+	if (!currentUser) {
+		return { error: "Unauthorized" };
+	}
+
+	try {
+		await auth.api.setPassword({
+			body: { newPassword },
+			headers: await headers(),
+		});
+
+		revalidatePath("/settings");
+		return { success: true };
+	} catch (error) {
+		console.error("Set password error:", error);
+		if (error instanceof Error) {
+			return { error: error.message };
+		}
+		return { error: "Failed to set password" };
+	}
+}
+
+/**
  * Handles soft deletion of a user account
  */
 export async function deactivateUserAccount(formData: FormData) {
