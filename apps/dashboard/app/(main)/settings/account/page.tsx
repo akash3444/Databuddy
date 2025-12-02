@@ -7,7 +7,6 @@ import {
 	GithubLogoIcon,
 	GoogleLogoIcon,
 	KeyIcon,
-	LinkBreakIcon,
 	LinkIcon,
 	ShieldCheckIcon,
 } from "@phosphor-icons/react";
@@ -15,7 +14,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { RightSidebar } from "@/components/right-sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,11 +28,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-	SettingsRow,
-	SettingsSection,
-	UnsavedChangesFooter,
-} from "../_components/settings-section";
+import { UnsavedChangesFooter } from "../_components/settings-section";
 import { TwoFactorDialog } from "./sections/two-factor-dialog";
 
 // Types
@@ -70,73 +64,6 @@ function getInitials(name: string): string {
 }
 
 // Sub-components
-function ProviderRow({
-	provider,
-	connectedAccount,
-	isOnlyAccount,
-	isLinking,
-	isUnlinking,
-	onLink,
-	onUnlink,
-}: {
-	provider: SocialProvider;
-	connectedAccount: Account | undefined;
-	isOnlyAccount: boolean;
-	isLinking: boolean;
-	isUnlinking: boolean;
-	onLink: (provider: SocialProvider) => void;
-	onUnlink: (providerId: string) => void;
-}) {
-	const config = PROVIDER_CONFIG[provider];
-	const ProviderIcon = config.icon;
-
-	return (
-		<div className="flex items-center justify-between rounded border bg-accent/30 p-3">
-			<div className="flex items-center gap-3">
-				<div className="flex size-10 items-center justify-center rounded bg-background">
-					<ProviderIcon className={`size-5 ${config.color}`} weight="duotone" />
-				</div>
-				<div>
-					<p className="font-medium text-sm">{config.name}</p>
-					{connectedAccount && (
-						<p className="text-muted-foreground text-xs">Connected</p>
-					)}
-				</div>
-			</div>
-			{connectedAccount ? (
-				<Button
-					disabled={isOnlyAccount || isUnlinking}
-					onClick={() => onUnlink(connectedAccount.providerId)}
-					size="sm"
-					title={isOnlyAccount ? "Cannot unlink your only login method" : ""}
-					variant="outline"
-				>
-					{isUnlinking ? (
-						<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-					) : (
-						<LinkBreakIcon className="mr-2 size-4" />
-					)}
-					Unlink
-				</Button>
-			) : (
-				<Button
-					disabled={isLinking}
-					onClick={() => onLink(provider)}
-					size="sm"
-					variant="outline"
-				>
-					{isLinking ? (
-						<CircleNotchIcon className="mr-2 size-4 animate-spin" />
-					) : (
-						<LinkIcon className="mr-2 size-4" />
-					)}
-					Connect
-				</Button>
-			)}
-		</div>
-	);
-}
-
 function ChangePasswordDialog({
 	open,
 	onOpenChange,
@@ -349,174 +276,237 @@ export default function AccountSettingsPage() {
 		<div className="flex h-full flex-col lg:grid lg:grid-cols-[1fr_18rem]">
 			<div className="flex min-h-0 flex-1 flex-col">
 				<div className="flex-1 overflow-y-auto">
-					{/* Profile Photo */}
-					<SettingsSection
-						description="Upload a photo to personalize your account"
-						title="Profile Photo"
-					>
-						{isLoading ? (
-							<div className="flex items-center gap-4">
-								<Skeleton className="size-20 rounded-full" />
-								<div className="space-y-2">
-									<Skeleton className="h-9 w-32" />
-									<Skeleton className="h-4 w-40" />
-								</div>
+					{/* Row 1: Profile Photo + Account Status */}
+					<div className="grid grid-cols-1 lg:contents">
+						<section className="border-b px-5 py-6 lg:border-r">
+							<div className="mb-4">
+								<h3 className="font-semibold text-sm">Profile Photo</h3>
+								<p className="text-muted-foreground text-xs">
+									Upload a photo to personalize your account
+								</p>
 							</div>
-						) : (
-							<div className="flex items-center gap-4">
-								<Avatar className="size-20">
-									<AvatarImage alt={name} src={imageUrl} />
-									<AvatarFallback className="bg-primary/10 font-semibold text-primary text-xl">
-										{getInitials(name || "User")}
-									</AvatarFallback>
-								</Avatar>
-								<div className="flex-1 space-y-2">
-									<Label htmlFor="image-url">Image URL</Label>
-									<Input
-										id="image-url"
-										onChange={(e) => setImageUrl(e.target.value)}
-										placeholder="https://example.com/avatar.jpg"
-										value={imageUrl}
-									/>
-									<p className="text-muted-foreground text-xs">
-										Enter a URL for your profile photo
-									</p>
+							{isLoading ? (
+								<div className="flex items-center gap-4">
+									<Skeleton className="size-20 rounded-full" />
+									<div className="space-y-2">
+										<Skeleton className="h-9 w-32" />
+										<Skeleton className="h-4 w-40" />
+									</div>
 								</div>
-							</div>
-						)}
-					</SettingsSection>
+							) : (
+								<div className="flex items-center gap-4">
+									<Avatar className="size-20">
+										<AvatarImage alt={name} src={imageUrl} />
+										<AvatarFallback className="bg-primary/10 font-semibold text-primary text-xl">
+											{getInitials(name || "User")}
+										</AvatarFallback>
+									</Avatar>
+									<div className="flex-1 space-y-2">
+										<Label htmlFor="image-url">Image URL</Label>
+										<Input
+											id="image-url"
+											onChange={(e) => setImageUrl(e.target.value)}
+											placeholder="https://example.com/avatar.jpg"
+											value={imageUrl}
+										/>
+										<p className="text-muted-foreground text-xs">
+											Enter a URL for your profile photo
+										</p>
+									</div>
+								</div>
+							)}
+						</section>
+					</div>
 
-					{/* Basic Info */}
-					<SettingsSection
-						description="Update your personal information"
-						title="Basic Information"
-					>
-						{isLoading ? (
-							<div className="grid gap-4 sm:grid-cols-2">
-								<Skeleton className="h-16 w-full" />
-								<Skeleton className="h-16 w-full" />
+					{/* Row 2: Basic Info + Connected Apps */}
+					<div className="grid grid-cols-1 lg:contents">
+						<section className="border-b px-5 py-6 lg:border-r">
+							<div className="mb-4">
+								<h3 className="font-semibold text-sm">Basic Information</h3>
+								<p className="text-muted-foreground text-xs">
+									Update your personal information
+								</p>
 							</div>
-						) : (
-							<div className="grid gap-4 sm:grid-cols-2">
-								<div className="space-y-2">
-									<Label htmlFor="name">Full Name</Label>
-									<Input
-										id="name"
-										onChange={(e) => setName(e.target.value)}
-										placeholder="Your name…"
-										value={name}
-									/>
+							{isLoading ? (
+								<div className="grid gap-4 sm:grid-cols-2">
+									<Skeleton className="h-16 w-full" />
+									<Skeleton className="h-16 w-full" />
 								</div>
-								<div className="space-y-2">
-									<Label htmlFor="email">Email Address</Label>
-									<Input
-										disabled
-										id="email"
-										type="email"
-										value={user?.email ?? ""}
-									/>
-									<p className="text-muted-foreground text-xs">
-										Email cannot be changed
-									</p>
+							) : (
+								<div className="grid gap-4 sm:grid-cols-2">
+									<div className="space-y-2">
+										<Label htmlFor="name">Full Name</Label>
+										<Input
+											id="name"
+											onChange={(e) => setName(e.target.value)}
+											placeholder="Your name…"
+											value={name}
+										/>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="email">Email Address</Label>
+										<Input
+											disabled
+											id="email"
+											type="email"
+											value={user?.email ?? ""}
+										/>
+										<p className="text-muted-foreground text-xs">
+											Email cannot be changed
+										</p>
+									</div>
 								</div>
+							)}
+						</section>
+					</div>
+
+					{/* Row 3: Security */}
+					<div className="grid grid-cols-1 lg:contents">
+						<section className="border-b px-5 py-6 lg:border-r">
+							<div className="mb-4">
+								<h3 className="font-semibold text-sm">Security</h3>
+								<p className="text-muted-foreground text-xs">
+									Secure your account with additional authentication
+								</p>
 							</div>
-						)}
-					</SettingsSection>
-
-					{/* Security */}
-					<SettingsSection
-						description="Secure your account with additional authentication"
-						title="Security"
-					>
-						<div className="space-y-4">
-							<SettingsRow
-								description="Add an extra layer of security to your account"
-								label="Two-Factor Authentication"
-							>
-								<Button
-									onClick={() => setShowTwoFactorDialog(true)}
-									size="sm"
-									variant="outline"
-								>
-									<ShieldCheckIcon className="mr-2 size-4" />
-									{user?.twoFactorEnabled ? "Manage" : "Enable"}
-								</Button>
-							</SettingsRow>
-
-							{hasCredentialAccount && (
-								<SettingsRow
-									description="Update your password regularly for security"
-									label="Change Password"
-								>
+							<div className="space-y-4">
+								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+									<div className="min-w-0 flex-1">
+										<p className="font-medium text-sm">
+											Two-Factor Authentication
+										</p>
+										<p className="text-muted-foreground text-xs">
+											Add an extra layer of security to your account
+										</p>
+									</div>
 									<Button
-										onClick={() => setShowPasswordDialog(true)}
+										onClick={() => setShowTwoFactorDialog(true)}
 										size="sm"
 										variant="outline"
 									>
-										<KeyIcon className="mr-2 size-4" />
-										Change
+										<ShieldCheckIcon className="mr-2 size-4" />
+										{user?.twoFactorEnabled ? "Manage" : "Enable"}
 									</Button>
-								</SettingsRow>
-							)}
-						</div>
-					</SettingsSection>
+								</div>
 
-					{/* Connected Identities */}
-					<SettingsSection
-						description="Link your accounts for easier sign-in"
-						title="Connected Identities"
-					>
-						<div className="space-y-3">
-							{isAccountsLoading ? (
-								<>
-									<Skeleton className="h-16 w-full" />
-									<Skeleton className="h-16 w-full" />
-								</>
-							) : (
-								<>
-									{SOCIAL_PROVIDERS.map((provider) => {
-										const connectedAccount = accounts.find(
-											(acc) => acc.providerId === provider
-										);
-										return (
-											<ProviderRow
-												connectedAccount={connectedAccount}
-												isLinking={linkSocial.isPending}
-												isOnlyAccount={
-													accounts.length === 1 && !!connectedAccount
-												}
-												isUnlinking={unlinkAccount.isPending}
-												key={provider}
-												onLink={(p) => linkSocial.mutate(p)}
-												onUnlink={(p) => unlinkAccount.mutate(p)}
-												provider={provider}
-											/>
-										);
-									})}
+								{hasCredentialAccount && (
+									<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+										<div className="min-w-0 flex-1">
+											<p className="font-medium text-sm">Change Password</p>
+											<p className="text-muted-foreground text-xs">
+												Update your password regularly for security
+											</p>
+										</div>
+										<Button
+											onClick={() => setShowPasswordDialog(true)}
+											size="sm"
+											variant="outline"
+										>
+											<KeyIcon className="mr-2 size-4" />
+											Change
+										</Button>
+									</div>
+								)}
+							</div>
+						</section>
+					</div>
 
-									{hasCredentialAccount && (
-										<div className="flex items-center justify-between rounded border bg-accent/30 p-3">
-											<div className="flex items-center gap-3">
-												<div className="flex size-10 items-center justify-center rounded bg-background">
+					{/* Row 4: Connected Identities */}
+					<div className="grid grid-cols-1 lg:contents">
+						<section className="px-5 py-6 lg:border-r">
+							<div className="mb-4">
+								<h3 className="font-semibold text-sm">Connected Identities</h3>
+								<p className="text-muted-foreground text-xs">
+									Link your accounts for easier sign-in
+								</p>
+							</div>
+							<div className="space-y-2">
+								{isAccountsLoading ? (
+									<>
+										<Skeleton className="h-10 w-full" />
+										<Skeleton className="h-10 w-full" />
+									</>
+								) : (
+									<>
+										{SOCIAL_PROVIDERS.map((provider) => {
+											const config = PROVIDER_CONFIG[provider];
+											const ProviderIcon = config.icon;
+											const connectedAccount = accounts.find(
+												(acc) => acc.providerId === provider
+											);
+											const isOnlyAccount =
+												accounts.length === 1 && !!connectedAccount;
+
+											return (
+												<div
+													className="flex items-center justify-between py-2"
+													key={provider}
+												>
+													<div className="flex items-center gap-3">
+														<ProviderIcon
+															className={`size-5 ${config.color}`}
+															weight="duotone"
+														/>
+														<span className="font-medium text-sm">
+															{config.name}
+														</span>
+													</div>
+													{connectedAccount ? (
+														<Button
+															disabled={isOnlyAccount || unlinkAccount.isPending}
+															onClick={() =>
+																unlinkAccount.mutate(connectedAccount.providerId)
+															}
+															size="sm"
+															title={
+																isOnlyAccount
+																	? "Cannot unlink your only login method"
+																	: ""
+															}
+															variant="ghost"
+														>
+															{unlinkAccount.isPending ? (
+																<CircleNotchIcon className="size-4 animate-spin" />
+															) : (
+																<Badge variant="green">Connected</Badge>
+															)}
+														</Button>
+													) : (
+														<Button
+															disabled={linkSocial.isPending}
+															onClick={() => linkSocial.mutate(provider)}
+															size="sm"
+															variant="outline"
+														>
+															{linkSocial.isPending ? (
+																<CircleNotchIcon className="mr-2 size-4 animate-spin" />
+															) : (
+																<LinkIcon className="mr-2 size-4" />
+															)}
+															Connect
+														</Button>
+													)}
+												</div>
+											);
+										})}
+
+										{hasCredentialAccount && (
+											<div className="flex items-center justify-between py-2">
+												<div className="flex items-center gap-3">
 													<KeyIcon
 														className="size-5 text-amber-500"
 														weight="duotone"
 													/>
+													<span className="font-medium text-sm">Password</span>
 												</div>
-												<div>
-													<p className="font-medium text-sm">Password</p>
-													<p className="text-muted-foreground text-xs">
-														Email & password login
-													</p>
-												</div>
+												<Badge variant="green">Active</Badge>
 											</div>
-											<Badge variant="green">Active</Badge>
-										</div>
-									)}
-								</>
-							)}
-						</div>
-					</SettingsSection>
+										)}
+									</>
+								)}
+							</div>
+						</section>
+					</div>
 				</div>
 
 				<UnsavedChangesFooter
@@ -527,8 +517,13 @@ export default function AccountSettingsPage() {
 				/>
 			</div>
 
-			<RightSidebar className="gap-0 p-0">
-				<RightSidebar.Section border title="Account Status">
+			{/* Right Sidebar - synced with main content */}
+			<div className="hidden border-l lg:block">
+				{/* Account Status - synced with Profile Photo row */}
+				<section className="border-b px-4 py-6">
+					<h4 className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+						Account Status
+					</h4>
 					{isLoading ? (
 						<div className="space-y-2.5">
 							<Skeleton className="h-5 w-full" />
@@ -565,9 +560,13 @@ export default function AccountSettingsPage() {
 							</div>
 						</div>
 					)}
-				</RightSidebar.Section>
+				</section>
 
-				<RightSidebar.Section border title="Connected Apps">
+				{/* Connected Apps - synced with Basic Info row */}
+				<section className="border-b px-4 py-6">
+					<h4 className="mb-3 font-medium text-muted-foreground text-xs uppercase tracking-wider">
+						Connected Apps
+					</h4>
 					{isAccountsLoading ? (
 						<div className="space-y-2">
 							<Skeleton className="h-5 w-full" />
@@ -590,12 +589,18 @@ export default function AccountSettingsPage() {
 							})}
 						</div>
 					)}
-				</RightSidebar.Section>
+				</section>
 
-				<RightSidebar.Section>
-					<RightSidebar.Tip description="Keep your email up to date to ensure you receive important notifications about your account." />
-				</RightSidebar.Section>
-			</RightSidebar>
+				{/* Tips - fills remaining space */}
+				<section className="px-4 py-6">
+					<div className="rounded border border-dashed bg-accent/30 p-3">
+						<p className="text-muted-foreground text-xs">
+							Keep your email up to date to ensure you receive important
+							notifications about your account.
+						</p>
+					</div>
+				</section>
+			</div>
 
 			{/* Dialogs */}
 			<ChangePasswordDialog
