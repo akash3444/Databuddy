@@ -396,8 +396,10 @@ export function MetricsChart({
 
 					{!refAreaLeft && annotations.length === 0 && !tipDismissed && (
 						<div className="absolute top-4 right-4 z-10">
-							<div className="flex items-center gap-2 rounded border bg-popover px-3 py-2 text-muted-foreground text-xs shadow-sm">
-								<span>💡 Click or drag on chart to create annotations</span>
+							<div className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 shadow-sm">
+								<span className="text-muted-foreground text-xs">
+									Click or drag on chart to create annotations
+								</span>
 								<button
 									aria-label="Dismiss tip"
 									className="text-muted-foreground transition-colors hover:text-foreground"
