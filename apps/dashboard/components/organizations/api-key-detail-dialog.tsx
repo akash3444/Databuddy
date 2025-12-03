@@ -173,7 +173,7 @@ export function ApiKeyDetailDialog({
 										{apiKey.prefix}_{apiKey.start}…
 									</SheetDescription>
 								</div>
-								<Badge variant="secondary">
+								<Badge variant={isActive ? "green" : "secondary"}>
 									{isActive ? "Active" : "Inactive"}
 								</Badge>
 							</div>

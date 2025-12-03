@@ -181,40 +181,40 @@ export function InvitationsView({
 						value={selectedTab}
 					>
 						{/* Tabs */}
-						<div className="border-b px-5">
-							<TabsList className="h-10 w-full justify-start gap-2 bg-transparent p-0">
+						<div className="border-b">
+							<TabsList className="flex h-10 w-full bg-transparent p-0">
 								<TabsTrigger
-									className="h-10 rounded-none border-transparent border-b-2 bg-transparent px-3 data-[state=active]:border-primary data-[state=active]:shadow-none"
+									className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-none border-transparent border-b-2 bg-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none"
 									value="pending"
 								>
-									<ClockIcon className="mr-1.5" size={14} weight="duotone" />
+									<ClockIcon className="size-3.5" weight="duotone" />
 									Pending
 									{pendingCount > 0 && (
-										<span className="ml-1.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 text-xs">
+										<span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-amber-600 text-xs dark:text-amber-500">
 											{pendingCount}
 										</span>
 									)}
 								</TabsTrigger>
 								<TabsTrigger
-									className="h-10 rounded-none border-transparent border-b-2 bg-transparent px-3 data-[state=active]:border-primary data-[state=active]:shadow-none"
+									className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-none border-transparent border-b-2 bg-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none"
 									value="expired"
 								>
-									<XIcon className="mr-1.5" size={14} weight="bold" />
+									<XIcon className="size-3.5" weight="bold" />
 									Expired
 									{expiredCount > 0 && (
-										<span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">
+										<span className="rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground text-xs">
 											{expiredCount}
 										</span>
 									)}
 								</TabsTrigger>
 								<TabsTrigger
-									className="h-10 rounded-none border-transparent border-b-2 bg-transparent px-3 data-[state=active]:border-primary data-[state=active]:shadow-none"
+									className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-none border-transparent border-b-2 bg-transparent data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=active]:shadow-none"
 									value="accepted"
 								>
-									<CheckIcon className="mr-1.5" size={14} weight="bold" />
+									<CheckIcon className="size-3.5" weight="bold" />
 									Accepted
 									{acceptedCount > 0 && (
-										<span className="ml-1.5 rounded-full bg-green-500/10 px-1.5 py-0.5 text-green-600 text-xs">
+										<span className="rounded-full bg-green-500/10 px-1.5 py-0.5 text-green-600 text-xs dark:text-green-500">
 											{acceptedCount}
 										</span>
 									)}

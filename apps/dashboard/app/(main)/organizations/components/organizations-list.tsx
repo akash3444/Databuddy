@@ -94,7 +94,7 @@ function OrganizationRow({
 			</div>
 
 			{isActive && (
-				<Badge variant="secondary">
+				<Badge variant="green">
 					<CheckCircleIcon className="mr-1" size={12} weight="fill" />
 					Active
 				</Badge>

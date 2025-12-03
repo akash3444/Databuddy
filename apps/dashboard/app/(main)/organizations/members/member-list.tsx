@@ -145,7 +145,6 @@ function MemberRow({
 					onClick={() =>
 						onConfirmRemove({ id: member.id, name: member.user.name })
 					}
-					size="sm"
 					variant="outline"
 				>
 					<TrashIcon size={14} />
