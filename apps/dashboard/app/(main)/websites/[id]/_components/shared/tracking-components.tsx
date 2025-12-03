@@ -402,7 +402,7 @@ export function InstallationTabs({
 			<TabsContent className="space-y-4" value="npm">
 				<div className="space-y-2">
 					<p className="mb-3 text-muted-foreground text-xs">
-						Install the DataBuddy package using your preferred package manager:
+						Install the Databuddy package using your preferred package manager:
 					</p>
 
 					<PackageManagerTabs

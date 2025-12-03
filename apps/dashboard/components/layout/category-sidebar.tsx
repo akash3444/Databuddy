@@ -82,7 +82,7 @@ export function CategorySidebar({
 						href="/websites"
 					>
 						<Image
-							alt="DataBuddy Logo"
+							alt="Databuddy Logo"
 							className="invert dark:invert-0"
 							height={32}
 							priority
