@@ -55,8 +55,6 @@ export function WebsiteTrackingSetupTab({ websiteId }: TrackingSetupTabProps) {
 	});
 
 	const handleRefresh = async () => {
-		toast.success("Checking tracking status...");
-
 		try {
 			const result = await refetchTrackingSetup();
 
