@@ -4,21 +4,25 @@ import {
 	ArrowRightIcon,
 	BrainIcon,
 	ChartBarIcon,
+	ClockIcon,
 	LightningIcon,
 	RobotIcon,
 	SidebarIcon,
 	TableIcon,
 } from "@phosphor-icons/react";
 import { useAtom, useSetAtom } from "jotai";
+import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { agentCanvasOpenAtom, agentInputAtom } from "./agent-atoms";
-import { AgentChatProvider } from "./agent-chat-context";
 import { AgentCanvas } from "./agent-canvas";
+import { AgentChatProvider } from "./agent-chat-context";
 import { AgentHeader } from "./agent-header";
 import { AgentInput } from "./agent-input";
 import { AgentMessages } from "./agent-messages";
+import { AgentSidebar } from "./agent-sidebar";
 import { AgentStatusIndicator } from "./agent-status-indicator";
 import {
 	Conversation,
@@ -27,10 +31,10 @@ import {
 } from "./conversation";
 import { useAgentChat } from "./hooks";
 
-interface AgentPageContentProps {
+type AgentPageContentProps = {
 	chatId: string;
 	websiteId: string;
-}
+};
 
 const SUGGESTED_PROMPTS = [
 	{
@@ -75,19 +79,35 @@ function AgentPageContentInner({
 }) {
 	const setInputValue = useSetAtom(agentInputAtom);
 	const [showCanvas, setShowCanvas] = useAtom(agentCanvasOpenAtom);
+	const [showSidebar, setShowSidebar] = useState(false);
 	const { messages, isLoading, hasError } = useAgentChat();
+
+	// Keyboard shortcut to toggle sidebar: Cmd+J (or Ctrl+J on Windows)
+	useHotkeys("mod+j", () => setShowSidebar((prev) => !prev), {
+		enableOnFormTags: true,
+		preventDefault: true,
+	});
 
 	console.log(`${DEBUG_PREFIX} Render:`, {
 		messagesCount: messages.length,
 		isLoading,
 		hasError,
-		messages: messages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
+		messages: messages.map((m) => ({
+			id: m.id,
+			role: m.role,
+			textLength: m.parts?.find((p) => p.type === "text")?.text?.length || 0,
+		})),
 	});
 
 	const hasMessages = messages.length > 0;
 
 	return (
 		<div className="relative flex flex-1 overflow-hidden">
+			<AgentSidebar
+				isOpen={showSidebar}
+				onClose={() => setShowSidebar(false)}
+			/>
+
 			<div
 				className={cn(
 					"fixed inset-y-0 right-0 z-20 w-full border-l bg-sidebar md:w-[500px] lg:w-[600px]",
@@ -132,6 +152,14 @@ function AgentPageContentInner({
 
 						<div className="flex items-center gap-1">
 							<Button
+								onClick={() => setShowSidebar(!showSidebar)}
+								size="icon"
+								title="Chat history"
+								variant="ghost"
+							>
+								<ClockIcon className="size-4" weight="duotone" />
+							</Button>
+							<Button
 								onClick={() => setShowCanvas(!showCanvas)}
 								size="icon"
 								title="Toggle canvas"
@@ -145,7 +173,7 @@ function AgentPageContentInner({
 
 				<Conversation className="flex-1">
 					<ConversationContent className="pb-[150px]">
-						<div className="mx-auto max-w-2xl w-full">
+						<div className="mx-auto w-full max-w-2xl">
 							{hasMessages ? (
 								<>
 									<AgentMessages

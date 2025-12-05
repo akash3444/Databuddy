@@ -14,6 +14,7 @@ import { AgentCommandMenu } from "./agent-command-menu";
 import { useAgentChat, useAgentCommands } from "./hooks";
 import { useAgentChatId, useSetAgentChatId } from "./agent-chat-context";
 import { RecordButton } from "./record-button";
+import { useEnterSubmit } from "@/hooks/use-enter-submit";
 
 export function AgentInput() {
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -23,6 +24,7 @@ export function AgentInput() {
 		useAgentCommands();
 	const chatId = useAgentChatId();
 	const setChatId = useSetAgentChatId();
+	const { formRef, onKeyDown: handleEnterSubmit } = useEnterSubmit();
 
 	const handleSubmit = (e?: React.FormEvent) => {
 		e?.preventDefault();
@@ -36,10 +38,12 @@ export function AgentInput() {
 	};
 
 	const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		// First, let command menu handle its own keys
 		if (handleKeyDown(e)) return;
-		if (e.key === "Enter" && !e.shiftKey && !showCommands) {
-			e.preventDefault();
-			handleSubmit();
+
+		// If commands are not shown, use the enter submit hook
+		if (!showCommands) {
+			handleEnterSubmit(e);
 		}
 	};
 
@@ -54,7 +58,7 @@ export function AgentInput() {
 				<div className="relative">
 					<AgentCommandMenu />
 
-					<form className="flex gap-2" onSubmit={handleSubmit}>
+					<form ref={formRef} className="flex gap-2" onSubmit={handleSubmit}>
 						<div className="relative flex-1">
 							<Input
 								className={cn(

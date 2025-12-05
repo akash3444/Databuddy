@@ -4,6 +4,7 @@ import type { AppContext } from "../config/context";
 import { appRouter, createRPCContext } from "@databuddy/rpc";
 import { ORPCError } from "@orpc/server";
 import { createToolLogger } from "./utils/logger";
+import { cached, cacheOptions } from "../cache";
 
 const stepSchema = z.object({
     type: z.enum(["PAGE_VIEW", "EVENT", "CUSTOM"]),
@@ -389,12 +390,17 @@ export function createFunnelTools(context: AppContext) {
     });
 
     return {
-        list_funnels: listFunnelsTool,
-        get_funnel_by_id: getFunnelByIdTool,
+        // Read operations - cached for better performance
+        list_funnels: cached(listFunnelsTool, cacheOptions.short),
+        get_funnel_by_id: cached(getFunnelByIdTool, cacheOptions.medium),
+
+        // Write operations - not cached
         create_funnel: createFunnelTool,
         update_funnel: updateFunnelTool,
         delete_funnel: deleteFunnelTool,
-        get_funnel_analytics: getFunnelAnalyticsTool,
-        get_funnel_analytics_by_referrer: getFunnelAnalyticsByReferrerTool,
+
+        // Analytics - cached for longer periods (expensive queries)
+        get_funnel_analytics: cached(getFunnelAnalyticsTool, cacheOptions.medium),
+        get_funnel_analytics_by_referrer: cached(getFunnelAnalyticsByReferrerTool, cacheOptions.medium),
     } as const;
 }

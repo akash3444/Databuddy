@@ -3,10 +3,10 @@
 import { useChat, useChatActions } from "@ai-sdk-tools/store";
 import type { UIMessage } from "ai";
 import { DefaultChatTransport } from "ai";
-import { useAtom, useSetAtom } from "jotai";
+import { useSetAtom } from "jotai";
 import { useParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { agentInputAtom, agentMessagesAtom, agentStatusAtom } from "../agent-atoms";
+import { useCallback, useMemo, useRef } from "react";
+import { agentInputAtom } from "../agent-atoms";
 import { useAgentChatId } from "../agent-chat-context";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
@@ -37,11 +37,11 @@ export function useAgentChat() {
             new DefaultChatTransport({
                 api: `${API_URL}/v1/agent/chat`,
                 credentials: "include",
-                prepareSendMessagesRequest({ messages, id }) {
+                prepareSendMessagesRequest({ messages }) {
                     const lastMessage = messages[messages.length - 1];
                     return {
                         body: {
-                            id,
+                            id: stableChatId,
                             websiteId,
                             message: lastMessage,
                             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -49,12 +49,12 @@ export function useAgentChat() {
                     };
                 },
             }),
-        [websiteId]
+        [websiteId, stableChatId]
     );
 
-    // Use useChat from SDK but sync to Jotai for persistence
+    // Use useChat from SDK - it's the single source of truth
     const { messages: sdkMessages, status: sdkStatus } = useChat<UIMessage>({
-        id: stableChatIdRef.current,
+        id: stableChatId,
         transport,
     });
 
@@ -63,93 +63,16 @@ export function useAgentChat() {
         messages: sdkMessages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
     });
 
-    // Sync SDK messages to Jotai atom for persistence
-    const [jotaiMessages, setJotaiMessages] = useAtom(agentMessagesAtom);
-    const [jotaiStatus, setJotaiStatus] = useAtom(agentStatusAtom);
+    // Simply use SDK messages directly - no complex syncing needed
+    const messages = sdkMessages;
 
-    // Use refs to track previous values and avoid infinite loops
-    const prevSdkMessagesRef = useRef<UIMessage[]>([]);
-    const prevSdkStatusRef = useRef<string>(sdkStatus);
-
-    console.log(`${DEBUG_PREFIX} Jotai messages:`, {
-        count: jotaiMessages.length,
-        messages: jotaiMessages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
-    });
-
-    useEffect(() => {
-        // Check if SDK messages actually changed
-        const sdkMessagesChanged =
-            sdkMessages.length !== prevSdkMessagesRef.current.length ||
-            sdkMessages.some((msg, idx) => {
-                const prevMsg = prevSdkMessagesRef.current[idx];
-                return !prevMsg || msg.id !== prevMsg.id ||
-                    JSON.stringify(msg) !== JSON.stringify(prevMsg);
-            });
-
-        const sdkStatusChanged = sdkStatus !== prevSdkStatusRef.current;
-
-        // Only proceed if something actually changed
-        if (!sdkMessagesChanged && !sdkStatusChanged) {
-            return;
-        }
-
-        // Use functional update to read current Jotai messages without adding to dependencies
-        setJotaiMessages((currentJotaiMessages) => {
-            console.log(`${DEBUG_PREFIX} Sync effect triggered - SDK: ${sdkMessages.length} msgs, Jotai: ${currentJotaiMessages.length} msgs, SDK status: ${sdkStatus}`);
-
-            // Always merge when SDK messages change - they're the source of truth for new/updated messages
-            if (sdkMessages.length > 0) {
-                // Merge: keep Jotai messages that aren't in SDK, update/add SDK messages
-                const sdkMessageIds = new Set(sdkMessages.map(m => m.id));
-                const mergedMessages: UIMessage[] = [];
-
-                // Add Jotai messages that aren't being updated by SDK (preserve history)
-                currentJotaiMessages.forEach(jotaiMsg => {
-                    if (!sdkMessageIds.has(jotaiMsg.id)) {
-                        mergedMessages.push(jotaiMsg);
-                    }
-                });
-
-                // Add all SDK messages (they're more up-to-date, including new ones)
-                sdkMessages.forEach(sdkMsg => {
-                    const existingIndex = mergedMessages.findIndex(m => m.id === sdkMsg.id);
-                    if (existingIndex >= 0) {
-                        // Update existing message with SDK version (might have new content)
-                        mergedMessages[existingIndex] = sdkMsg;
-                    } else {
-                        // Add new message from SDK
-                        mergedMessages.push(sdkMsg);
-                    }
-                });
-
-                console.log(`${DEBUG_PREFIX} Syncing SDK to Jotai - Jotai: ${currentJotaiMessages.length}, SDK: ${sdkMessages.length}, Merged: ${mergedMessages.length}`);
-                return mergedMessages;
-            } else if (sdkMessages.length === 0 && currentJotaiMessages.length > 0) {
-                // SDK cleared but we have Jotai messages - keep Jotai (preserve history)
-                console.log(`${DEBUG_PREFIX} SDK cleared but keeping Jotai messages (${currentJotaiMessages.length})`);
-                return currentJotaiMessages;
-            } else {
-                // Both empty or SDK has messages but we already processed them
-                return currentJotaiMessages;
-            }
-        });
-
-        // Map SDK status to our status type (ready -> idle)
-        const mappedStatus = sdkStatus === "ready" ? "idle" : sdkStatus as "idle" | "submitted" | "streaming" | "error";
-        setJotaiStatus(mappedStatus);
-
-        // Update refs
-        prevSdkMessagesRef.current = sdkMessages;
-        prevSdkStatusRef.current = sdkStatus;
-    }, [sdkMessages, sdkStatus, setJotaiMessages, setJotaiStatus]);
-
-    // Use Jotai messages for display (they persist even if SDK resets)
-    const messages = jotaiMessages.length > 0 ? jotaiMessages : sdkMessages;
-    const status = jotaiStatus !== "idle" ? jotaiStatus : sdkStatus;
+    // Map SDK status to our status type
+    const mappedStatus = sdkStatus === "ready" ? "idle" : sdkStatus as "idle" | "submitted" | "streaming" | "error";
+    const status = mappedStatus;
 
     console.log(`${DEBUG_PREFIX} Final messages for display:`, {
         count: messages.length,
-        source: jotaiMessages.length > 0 ? "jotai" : "sdk",
+        source: "sdk",
         messages: messages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
     });
 
@@ -171,7 +94,6 @@ export function useAgentChat() {
             console.log(`${DEBUG_PREFIX} sendMessage called:`, {
                 content: content.trim(),
                 currentMessages: messages.length,
-                jotaiMessages: jotaiMessages.length,
                 sdkMessages: sdkMessages.length
             });
 
@@ -183,17 +105,15 @@ export function useAgentChat() {
                 metadata,
             });
         },
-        [sdkSendMessage, setInput, messages.length, jotaiMessages.length, sdkMessages.length]
+        [sdkSendMessage, setInput, messages.length, sdkMessages.length]
     );
 
     const reset = useCallback(() => {
-        console.log(`${DEBUG_PREFIX} reset called - clearing ${jotaiMessages.length} Jotai messages and ${sdkMessages.length} SDK messages`);
+        console.log(`${DEBUG_PREFIX} reset called - clearing ${sdkMessages.length} SDK messages`);
         sdkReset();
-        setJotaiMessages([]);
-        setJotaiStatus("idle");
         setInput("");
         lastUserMessageRef.current = "";
-    }, [sdkReset, setJotaiMessages, setJotaiStatus, setInput, jotaiMessages.length, sdkMessages.length]);
+    }, [sdkReset, setInput, sdkMessages.length]);
 
     const stop = useCallback(() => {
         sdkStop();
