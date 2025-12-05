@@ -7,6 +7,7 @@ import { z } from "zod";
 import type { Context } from "../orpc";
 import { protectedProcedure, publicProcedure } from "../orpc";
 import { authorizeWebsiteAccess } from "../utils/auth";
+import { getCacheAuthContext } from "../utils/cache-keys";
 
 const flagsCache = createDrizzleCache({ redis, namespace: "flags" });
 const CACHE_DURATION = 60;
@@ -203,9 +204,14 @@ export const flagsRouter = {
 
 	getById: publicProcedure
 		.input(getFlagSchema)
-		.handler(({ context, input }) => {
+		.handler(async ({ context, input }) => {
 			const scope = getScope(input.websiteId, input.organizationId);
-			const cacheKey = `byId:${input.id}:${scope}`;
+			const authContext = await getCacheAuthContext(context, {
+				websiteId: input.websiteId,
+				organizationId: input.organizationId,
+			});
+
+			const cacheKey = `byId:${input.id}:${scope}:${authContext}`;
 
 			return flagsCache.withCache({
 				key: cacheKey,
@@ -244,9 +250,14 @@ export const flagsRouter = {
 
 	getByKey: publicProcedure
 		.input(getFlagByKeySchema)
-		.handler(({ context, input }) => {
+		.handler(async ({ context, input }) => {
 			const scope = getScope(input.websiteId, input.organizationId);
-			const cacheKey = `byKey:${input.key}:${scope}`;
+			const authContext = await getCacheAuthContext(context, {
+				websiteId: input.websiteId,
+				organizationId: input.organizationId,
+			});
+
+			const cacheKey = `byKey:${input.key}:${scope}:${authContext}`;
 
 			return flagsCache.withCache({
 				key: cacheKey,

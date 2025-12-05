@@ -71,15 +71,16 @@ export function BillingProvider({
 	const params = useParams();
 	const pathname = usePathname();
 
-	// Determine the websiteId - only pass it for demo routes (unauthenticated viewing)
-	// For authenticated users on /websites/*, the backend uses their session context
 	const websiteId = useMemo(() => {
 		if (propWebsiteId) return propWebsiteId;
 
-		// Only use route param for demo routes (public/unauthenticated viewing)
+		const isDemoRoute = pathname?.startsWith("/demo/");
+		
+		if (isDemoRoute) {
 		const routeId = params?.id;
-		if (typeof routeId === "string" && routeId && pathname?.includes("/demo/")) {
+			if (typeof routeId === "string" && routeId) {
 			return routeId;
+			}
 		}
 
 		return undefined;
@@ -104,7 +105,7 @@ export function BillingProvider({
 		refetch: refetchBillingContext,
 	} = useQuery({
 		...orpc.organizations.getBillingContext.queryOptions({
-			websiteId,
+			input: websiteId ? { websiteId } : undefined,
 		}),
 	});
 

@@ -12,6 +12,7 @@ import {
 	websites,
 } from "@databuddy/db";
 import { getPendingInvitationsSchema } from "@databuddy/validation";
+import { logger } from "@databuddy/shared/logger";
 import { ORPCError } from "@orpc/server";
 import { Autumn as autumn } from "autumn-js";
 import { z } from "zod";
@@ -412,14 +413,26 @@ export const organizationsRouter = {
 					(p) => p.status === "active"
 				);
 
+				// Normalize product ID to lowercase for consistency
+				const planId = activeProduct?.id
+					? String(activeProduct.id).toLowerCase()
+					: "free";
+
 				return {
-					planId: activeProduct?.id ?? "free",
+					planId,
 					isOrganization,
 					canUserUpgrade,
 					hasActiveSubscription: Boolean(activeProduct),
 				};
 			} catch (error) {
-				console.error("Failed to get billing context:", error);
+				logger.error(
+					{
+						error,
+						customerId,
+						websiteId: input?.websiteId,
+					},
+					"Failed to get billing context"
+				);
 				return {
 					planId: "free",
 					isOrganization,

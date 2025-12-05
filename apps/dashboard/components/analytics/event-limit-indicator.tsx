@@ -1,14 +1,19 @@
 "use client";
 
 import { WarningIcon } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { orpc } from "@/lib/orpc";
 
 export function EventLimitIndicator() {
+	const pathname = usePathname();
+	const isDemoRoute = pathname?.startsWith("/demo/");
+
 	const { data } = useQuery({
 		...orpc.organizations.getUsage.queryOptions(),
+		enabled: !isDemoRoute,
 	});
 
 	if (!data || data.unlimited) {
