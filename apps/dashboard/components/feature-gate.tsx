@@ -52,7 +52,8 @@ export function FeatureGate({
 	description,
 	blockWhileLoading = false,
 }: FeatureGateProps) {
-	const { isFeatureEnabled, currentPlanId, isLoading } = useBillingContext();
+	const { isFeatureEnabled, currentPlanId, isLoading, canUserUpgrade } =
+		useBillingContext();
 
 	if (isLoading && !blockWhileLoading) {
 		return <>{children}</>;
@@ -122,13 +123,21 @@ export function FeatureGate({
 					</div>
 
 					{/* CTA */}
-					<Button asChild className="group w-full gap-2" size="lg">
-						<Link href="/billing/plans">
-							<RocketLaunchIcon className="size-5" weight="duotone" />
-							Upgrade to {planConfig.name}
-							<ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
-						</Link>
-					</Button>
+					{canUserUpgrade ? (
+						<Button asChild className="group w-full gap-2" size="lg">
+							<Link href="/billing/plans">
+								<RocketLaunchIcon className="size-5" weight="duotone" />
+								Upgrade to {planConfig.name}
+								<ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+							</Link>
+						</Button>
+					) : (
+						<div className="rounded-md border bg-muted/50 px-4 py-3 text-center">
+							<p className="font-medium text-muted-foreground text-sm">
+								Contact your organization owner to upgrade
+							</p>
+						</div>
+					)}
 				</CardContent>
 			</Card>
 		</div>
@@ -136,8 +145,13 @@ export function FeatureGate({
 }
 
 export function useFeatureGate(feature: GatedFeatureId) {
-	const { isFeatureEnabled, getGatedFeatureAccess, isLoading } =
-		useBillingContext();
+	const {
+		isFeatureEnabled,
+		getGatedFeatureAccess,
+		isLoading,
+		canUserUpgrade,
+		isOrganizationBilling,
+	} = useBillingContext();
 
 	const access = getGatedFeatureAccess(feature);
 	const metadata = FEATURE_METADATA[feature];
@@ -149,5 +163,7 @@ export function useFeatureGate(feature: GatedFeatureId) {
 		...access,
 		planName: planConfig?.name ?? null,
 		featureName: metadata?.name ?? feature,
+		canUserUpgrade,
+		isOrganizationBilling,
 	};
 }

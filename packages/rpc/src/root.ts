@@ -1,4 +1,5 @@
 import { annotationsRouter } from "./routers/annotations";
+import { agentRouter } from "./routers/agent";
 import { apikeysRouter } from "./routers/apikeys";
 import { assistantRouter } from "./routers/assistant";
 import { autocompleteRouter } from "./routers/autocomplete";
@@ -26,6 +27,7 @@ export const appRouter = {
 	flags: flagsRouter,
 	assistant: assistantRouter,
 	chat: chatRouter,
+	agent: agentRouter,
 	organizations: organizationsRouter,
 	billing: billingRouter,
 	export: exportRouter,

@@ -7,6 +7,7 @@ import {
 	MagnifyingGlassIcon,
 	SparkleIcon,
 	TableIcon,
+	WarningIcon,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -37,33 +38,50 @@ const TOOL_ICONS: Record<string, typeof SparkleIcon> = {
 };
 
 export function AgentStatusIndicator() {
-	const { messages, status } = useAgentChat();
+	const { messages, status, hasError } = useAgentChat();
 	const { displayMessage, currentToolCall, agentStatus, isStreaming } =
 		useChatStatus(messages, status);
 
-	if (!(displayMessage || isStreaming)) return null;
+	if (!(displayMessage || isStreaming || hasError)) return null;
 
 	const Icon = currentToolCall
 		? (TOOL_ICONS[currentToolCall] ?? SparkleIcon)
 		: (STATUS_ICONS[agentStatus] ?? SparkleIcon);
 
 	return (
-		<div className="flex h-8 items-center">
+		<div className="h-8 flex items-center">
 			<AnimatePresence mode="wait">
-				{displayMessage ? (
+				{hasError ? (
 					<motion.div
 						animate={{ opacity: 1, x: 0 }}
-						className="flex items-center gap-2"
+						className="flex items-center gap-1.5"
+						exit={{ opacity: 0, x: -10 }}
+						initial={{ opacity: 0, x: 10 }}
+						key="error"
+						transition={{ duration: 0.2 }}
+					>
+						<WarningIcon
+							className="size-3 text-destructive shrink-0"
+							weight="fill"
+						/>
+						<span className="text-destructive text-xs">Request failed</span>
+					</motion.div>
+				) : displayMessage ? (
+					<motion.div
+						animate={{ opacity: 1, x: 0 }}
+						className="flex items-center gap-1.5 text-muted-foreground"
 						exit={{ opacity: 0, x: -10 }}
 						initial={{ opacity: 0, x: 10 }}
 						key={displayMessage}
-						transition={{ duration: 0.15 }}
+						transition={{ duration: 0.2 }}
 					>
-						<Icon
-							className="size-4 animate-pulse text-foreground/50"
-							weight="duotone"
-						/>
-						<span className="text-foreground/50 text-xs">{displayMessage}</span>
+						{Icon && (
+							<Icon
+								className="size-3 shrink-0 text-current"
+								weight="duotone"
+							/>
+						)}
+						<span className="text-xs font-normal">{displayMessage}</span>
 					</motion.div>
 				) : isStreaming ? (
 					<motion.div
@@ -73,7 +91,7 @@ export function AgentStatusIndicator() {
 						key="loader"
 					>
 						<CircleNotchIcon
-							className="size-4 animate-spin text-foreground/50"
+							className="size-4 animate-spin text-muted-foreground"
 							weight="bold"
 						/>
 					</motion.div>

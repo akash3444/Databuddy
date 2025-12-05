@@ -1,16 +1,27 @@
 "use client";
 
 import { PlusIcon } from "@phosphor-icons/react";
+import { generateId } from "ai";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useAgentChat } from "./hooks/use-agent-chat";
 
 export function NewChatButton() {
+	const router = useRouter();
+	const { id } = useParams();
 	const { reset } = useAgentChat();
+
+	const handleNewChat = () => {
+		reset();
+		// Navigate to a new chat with a new chatId
+		const newChatId = generateId();
+		router.push(`/websites/${id}/agent?chatId=${newChatId}`);
+	};
 
 	return (
 		<Button
 			className="gap-1.5"
-			onClick={() => reset()}
+			onClick={handleNewChat}
 			size="sm"
 			variant="outline"
 		>

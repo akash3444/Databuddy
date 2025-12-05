@@ -2,8 +2,10 @@
 
 import type { Customer, CustomerFeature, Product } from "autumn-js";
 import { useCustomer, usePricingTable } from "autumn-js/react";
-import dayjs from "dayjs";
+import { useQuery } from "@tanstack/react-query";
+import { useParams, usePathname } from "next/navigation";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { orpc } from "@/lib/orpc";
 import {
 	FEATURE_IDS,
 	FEATURE_METADATA,
@@ -37,6 +39,10 @@ export interface BillingContextValue {
 	hasActiveSubscription: boolean;
 	currentPlanId: PlanId | null;
 	isFree: boolean;
+	// Organization context - true if billing is based on org owner
+	isOrganizationBilling: boolean;
+	// Whether the current user can upgrade (false if viewing org and not owner)
+	canUserUpgrade: boolean;
 	// Usage-based features
 	canUse: (featureId: FeatureId | string) => boolean;
 	getUsage: (featureId: FeatureId | string) => FeatureAccess;
@@ -52,7 +58,33 @@ export interface BillingContextValue {
 
 const BillingContext = createContext<BillingContextValue | null>(null);
 
-export function BillingProvider({ children }: { children: ReactNode }) {
+interface BillingProviderProps {
+	children: ReactNode;
+	/** Optional website ID to get billing context for (for demos/public pages) */
+	websiteId?: string;
+}
+
+export function BillingProvider({
+	children,
+	websiteId: propWebsiteId,
+}: BillingProviderProps) {
+	const params = useParams();
+	const pathname = usePathname();
+
+	// Determine the websiteId - only pass it for demo routes (unauthenticated viewing)
+	// For authenticated users on /websites/*, the backend uses their session context
+	const websiteId = useMemo(() => {
+		if (propWebsiteId) return propWebsiteId;
+
+		// Only use route param for demo routes (public/unauthenticated viewing)
+		const routeId = params?.id;
+		if (typeof routeId === "string" && routeId && pathname?.includes("/demo/")) {
+			return routeId;
+		}
+
+		return undefined;
+	}, [propWebsiteId, params?.id, pathname]);
+
 	const {
 		customer,
 		isLoading: isCustomerLoading,
@@ -65,19 +97,29 @@ export function BillingProvider({ children }: { children: ReactNode }) {
 		refetch: refetchProducts,
 	} = usePricingTable();
 
-	const value = useMemo<BillingContextValue>(() => {
-		const activeProduct = customer?.products?.find(
-			(p) =>
-				p.status === "active" ||
-				(p.canceled_at && dayjs(p.current_period_end).isAfter(dayjs()))
-		);
+	// Get the correct billing context (handles org/website ownership)
+	const {
+		data: billingContext,
+		isLoading: isBillingContextLoading,
+		refetch: refetchBillingContext,
+	} = useQuery({
+		...orpc.organizations.getBillingContext.queryOptions({
+			websiteId,
+		}),
+	});
 
-		const currentPlanId = (activeProduct?.id ?? PLAN_IDS.FREE) as PlanId;
+	const value = useMemo<BillingContextValue>(() => {
+		// Use the billing context from backend which correctly handles org ownership
+		const effectivePlanId = (billingContext?.planId ?? PLAN_IDS.FREE) as PlanId;
+		const isOrganizationBilling = billingContext?.isOrganization ?? false;
+		const canUserUpgrade = billingContext?.canUserUpgrade ?? true;
+
+		const currentPlanId = effectivePlanId;
 		const currentPlan = products?.find((p) => p.id === currentPlanId);
 		const isFree =
 			currentPlanId === PLAN_IDS.FREE ||
 			currentPlan?.properties?.is_free === true ||
-			!activeProduct;
+			!billingContext?.hasActiveSubscription;
 
 		const getFeature = (id: FeatureId | string): CustomerFeature | null =>
 			customer?.features?.[id] ?? null;
@@ -142,16 +184,19 @@ export function BillingProvider({ children }: { children: ReactNode }) {
 
 		const refetch = () => {
 			refetchCustomer();
+			refetchBillingContext();
 			if (typeof refetchProducts === "function") refetchProducts();
 		};
 
 		return {
 			customer: customer ?? null,
 			products: products ?? [],
-			isLoading: isCustomerLoading || isProductsLoading,
-			hasActiveSubscription: !!activeProduct && !isFree,
+			isLoading: isCustomerLoading || isProductsLoading || isBillingContextLoading,
+			hasActiveSubscription: billingContext?.hasActiveSubscription ?? false,
 			currentPlanId,
 			isFree,
+			isOrganizationBilling,
+			canUserUpgrade,
 			canUse,
 			getUsage,
 			getFeature,
@@ -163,9 +208,12 @@ export function BillingProvider({ children }: { children: ReactNode }) {
 	}, [
 		customer,
 		products,
+		billingContext,
 		isCustomerLoading,
 		isProductsLoading,
+		isBillingContextLoading,
 		refetchCustomer,
+		refetchBillingContext,
 		refetchProducts,
 	]);
 

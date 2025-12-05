@@ -8,7 +8,6 @@ import {
 	ThumbsUpIcon,
 } from "@phosphor-icons/react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
 	Tooltip,
 	TooltipContent,
@@ -20,140 +19,146 @@ import { useAgentChat } from "./hooks/use-agent-chat";
 
 interface AgentMessageActionsProps {
 	messageContent: string;
+	isLastMessage?: boolean;
+	isError?: boolean;
 }
 
 export function AgentMessageActions({
 	messageContent,
+	isLastMessage = false,
+	isError = false,
 }: AgentMessageActionsProps) {
 	const [feedbackGiven, setFeedbackGiven] = useState<
 		"positive" | "negative" | null
 	>(null);
 	const [copied, setCopied] = useState(false);
-	const { reset } = useAgentChat();
+	const { retry, isLoading } = useAgentChat();
 
 	const handleCopy = async () => {
 		try {
 			await navigator.clipboard.writeText(messageContent);
 			setCopied(true);
 			setTimeout(() => setCopied(false), 2000);
-		} catch (error) {
-			console.error("Failed to copy:", error);
+		} catch {
+			// Silently fail - the UI will show the error state
 		}
 	};
 
 	const handleRegenerate = () => {
-		// TODO: Implement actual regeneration
-		reset();
+		if (isLoading) return;
+		retry();
 	};
 
 	const handlePositive = () => {
 		if (feedbackGiven === "positive") {
 			setFeedbackGiven(null);
-			// TODO: Delete feedback via API
 			return;
 		}
 		setFeedbackGiven("positive");
-		// TODO: Submit positive feedback via API
 	};
 
 	const handleNegative = () => {
 		if (feedbackGiven === "negative") {
 			setFeedbackGiven(null);
-			// TODO: Delete feedback via API
 			return;
 		}
 		setFeedbackGiven("negative");
-		// TODO: Submit negative feedback via API
 	};
 
 	return (
-		<div className="flex items-center gap-0.5">
+		<div className="flex items-center gap-1">
 			<TooltipProvider delayDuration={200}>
 				{/* Copy Button */}
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Button
-							className="size-7"
+						<button
+							type="button"
 							onClick={handleCopy}
-							size="icon"
-							variant="ghost"
+							className="flex items-center justify-center w-6 h-6 transition-colors duration-200 hover:bg-muted"
 						>
 							{copied ? (
-								<CheckIcon className="size-3.5 text-success" />
+								<CheckIcon className="size-3.5 animate-in zoom-in-50 duration-200" />
 							) : (
-								<CopyIcon className="size-3.5 text-muted-foreground" />
+								<CopyIcon className="size-3 text-muted-foreground hover:text-foreground" />
 							)}
-						</Button>
+						</button>
 					</TooltipTrigger>
 					<TooltipContent className="px-2 py-1 text-xs">
 						{copied ? "Copied!" : "Copy response"}
 					</TooltipContent>
 				</Tooltip>
 
-				{/* Regenerate Button */}
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<Button
-							className="size-7"
-							onClick={handleRegenerate}
-							size="icon"
-							variant="ghost"
-						>
-							<ArrowsClockwiseIcon className="size-3.5 text-muted-foreground" />
-						</Button>
-					</TooltipTrigger>
-					<TooltipContent className="px-2 py-1 text-xs">
-						Retry response
-					</TooltipContent>
-				</Tooltip>
+				{/* Regenerate Button - Only show for last message */}
+				{isLastMessage && (
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<button
+								type="button"
+								disabled={isLoading}
+								onClick={handleRegenerate}
+								className="flex items-center justify-center w-6 h-6 transition-colors duration-200 hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								<ArrowsClockwiseIcon
+									className={cn(
+										"size-3.5 text-muted-foreground hover:text-foreground transition-transform",
+										isLoading && "animate-spin"
+									)}
+								/>
+							</button>
+						</TooltipTrigger>
+						<TooltipContent className="px-2 py-1 text-xs">
+							{isError ? "Retry response" : "Retry response"}
+						</TooltipContent>
+					</Tooltip>
+				)}
 
 				{/* Positive Feedback */}
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Button
-							className="size-7"
+						<button
+							type="button"
 							onClick={handlePositive}
-							size="icon"
-							variant="ghost"
+							className="flex items-center justify-center w-6 h-6 transition-colors duration-200 hover:bg-muted"
 						>
 							<ThumbsUpIcon
 								className={cn(
-									"size-3.5",
+									"w-3 h-3",
 									feedbackGiven === "positive"
-										? "text-foreground"
-										: "text-muted-foreground"
+										? "fill-foreground text-foreground"
+										: "text-muted-foreground hover:text-foreground"
 								)}
-								weight={feedbackGiven === "positive" ? "fill" : "regular"}
 							/>
-						</Button>
+						</button>
 					</TooltipTrigger>
 					<TooltipContent className="px-2 py-1 text-xs">
-						{feedbackGiven === "positive" ? "Remove feedback" : "Good response"}
+						{feedbackGiven === "positive"
+							? "Remove positive feedback"
+							: "Positive feedback"}
 					</TooltipContent>
 				</Tooltip>
 
 				{/* Negative Feedback */}
 				<Tooltip>
 					<TooltipTrigger asChild>
-						<Button
-							className="size-7"
+						<button
+							type="button"
 							onClick={handleNegative}
-							size="icon"
-							variant="ghost"
+							className="flex items-center justify-center w-6 h-6 transition-colors duration-200 hover:bg-muted"
 						>
 							<ThumbsDownIcon
 								className={cn(
-									"size-3.5",
+									"w-3 h-3",
 									feedbackGiven === "negative"
-										? "text-foreground"
-										: "text-muted-foreground"
+										? "fill-foreground text-foreground"
+										: "text-muted-foreground hover:text-foreground"
 								)}
-								weight={feedbackGiven === "negative" ? "fill" : "regular"}
 							/>
-						</Button>
+						</button>
 					</TooltipTrigger>
 					<TooltipContent className="px-2 py-1 text-xs">
-						{feedbackGiven === "negative" ? "Remove feedback" : "Poor response"}
+						{feedbackGiven === "negative"
+							? "Remove negative feedback"
+							: "Negative feedback"}
 					</TooltipContent>
 				</Tooltip>
 			</TooltipProvider>

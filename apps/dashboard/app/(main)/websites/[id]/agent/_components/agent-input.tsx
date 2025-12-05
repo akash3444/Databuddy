@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { AgentCommandMenu } from "./agent-command-menu";
 import { useAgentChat, useAgentCommands } from "./hooks";
+import { useAgentChatId, useSetAgentChatId } from "./agent-chat-context";
 import { RecordButton } from "./record-button";
 
 export function AgentInput() {
@@ -20,10 +21,13 @@ export function AgentInput() {
 	const { sendMessage, stop, isLoading } = useAgentChat();
 	const { input, handleInputChange, handleKeyDown, showCommands } =
 		useAgentCommands();
+	const chatId = useAgentChatId();
+	const setChatId = useSetAgentChatId();
 
 	const handleSubmit = (e?: React.FormEvent) => {
 		e?.preventDefault();
 		if (!input.trim() || isLoading) return;
+		if (chatId) setChatId(chatId);
 		sendMessage(input.trim());
 	};
 
@@ -32,10 +36,7 @@ export function AgentInput() {
 	};
 
 	const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		// Let command menu handle navigation keys
 		if (handleKeyDown(e)) return;
-
-		// Submit on Enter (when not in command mode)
 		if (e.key === "Enter" && !e.shiftKey && !showCommands) {
 			e.preventDefault();
 			handleSubmit();

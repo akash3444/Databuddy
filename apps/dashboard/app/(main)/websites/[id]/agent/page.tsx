@@ -1,22 +1,30 @@
-"use client";
-
 import { Provider as ChatProvider } from "@ai-sdk-tools/store";
-import { useParams } from "next/navigation";
+import type { UIMessage } from "ai";
 import { FeatureGate } from "@/components/feature-gate";
 import { GATED_FEATURES } from "@/components/providers/billing-provider";
-import { AgentPageContent } from "./_components/agent-page-content";
+import { getServerRPCClient } from "@/lib/orpc-server";
+import { AgentPageClient } from "./_components/agent-page-client";
 
-export default function AgentPage() {
-	const { id } = useParams();
-	const websiteId = id as string;
+type Props = {
+	params: Promise<{ id: string }>;
+	searchParams: Promise<{ chatId?: string }>;
+};
+
+export default async function AgentPage(props: Props) {
+	const { id } = await props.params;
+	const { chatId } = await props.searchParams;
+
+	const rpcClient = await getServerRPCClient();
+	const chat = chatId
+		? await rpcClient.agent.getMessages({ chatId, websiteId: id })
+		: null;
 
 	return (
-		<FeatureGate feature={GATED_FEATURES.GEOGRAPHIC}>
-			<ChatProvider initialMessages={[]} key={websiteId}>
-				<div className="relative flex h-full flex-col">
-					<AgentPageContent websiteId={websiteId} />
-				</div>
-			</ChatProvider>
-		</FeatureGate>
+		<ChatProvider
+			initialMessages={(chat?.messages ?? []) as UIMessage[]}
+			key={chatId || "home"}
+		>
+			<AgentPageClient chatId={chatId ?? null} websiteId={id} />
+		</ChatProvider>
 	);
 }

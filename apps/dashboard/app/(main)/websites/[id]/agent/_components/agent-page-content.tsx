@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { agentCanvasOpenAtom, agentInputAtom } from "./agent-atoms";
+import { AgentChatProvider } from "./agent-chat-context";
 import { AgentCanvas } from "./agent-canvas";
 import { AgentHeader } from "./agent-header";
 import { AgentInput } from "./agent-input";
@@ -25,9 +26,9 @@ import {
 	ConversationScrollButton,
 } from "./conversation";
 import { useAgentChat } from "./hooks";
-import { SuggestedPrompts } from "./suggested-prompts";
 
 interface AgentPageContentProps {
+	chatId: string;
 	websiteId: string;
 }
 
@@ -55,11 +56,24 @@ const SUGGESTED_PROMPTS = [
 ];
 
 export function AgentPageContent({
+	chatId,
 	websiteId: _websiteId,
 }: AgentPageContentProps) {
+	return (
+		<AgentChatProvider chatId={chatId}>
+			<AgentPageContentInner websiteId={_websiteId} />
+		</AgentChatProvider>
+	);
+}
+
+function AgentPageContentInner({
+	websiteId: _websiteId,
+}: {
+	websiteId: string;
+}) {
 	const setInputValue = useSetAtom(agentInputAtom);
 	const [showCanvas, setShowCanvas] = useAtom(agentCanvasOpenAtom);
-	const { messages, isLoading } = useAgentChat();
+	const { messages, isLoading, hasError } = useAgentChat();
 
 	const hasMessages = messages.length > 0;
 
@@ -121,11 +135,15 @@ export function AgentPageContent({
 				</div>
 
 				<Conversation className="flex-1">
-					<ConversationContent className="pb-32">
-						<div className="mx-auto max-w-2xl">
+					<ConversationContent className="pb-[150px]">
+						<div className="mx-auto max-w-2xl w-full">
 							{hasMessages ? (
 								<>
-									<AgentMessages isStreaming={isLoading} messages={messages} />
+									<AgentMessages
+										hasError={hasError}
+										isStreaming={isLoading}
+										messages={messages}
+									/>
 									<AgentStatusIndicator />
 								</>
 							) : (
@@ -135,13 +153,6 @@ export function AgentPageContent({
 					</ConversationContent>
 					<ConversationScrollButton />
 				</Conversation>
-
-				{hasMessages && (
-					<div className="mx-auto w-full max-w-2xl px-4 pb-2">
-						<SuggestedPrompts />
-					</div>
-				)}
-
 				<AgentInput />
 			</div>
 		</div>
