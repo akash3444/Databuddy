@@ -70,8 +70,6 @@ export function AgentPageContent({
 	);
 }
 
-const DEBUG_PREFIX = "[AGENT-PAGE-CONTENT]";
-
 function AgentPageContentInner({
 	websiteId: _websiteId,
 }: {
@@ -86,17 +84,6 @@ function AgentPageContentInner({
 	useHotkeys("mod+j", () => setShowSidebar((prev) => !prev), {
 		enableOnFormTags: true,
 		preventDefault: true,
-	});
-
-	console.log(`${DEBUG_PREFIX} Render:`, {
-		messagesCount: messages.length,
-		isLoading,
-		hasError,
-		messages: messages.map((m) => ({
-			id: m.id,
-			role: m.role,
-			textLength: m.parts?.find((p) => p.type === "text")?.text?.length || 0,
-		})),
 	});
 
 	const hasMessages = messages.length > 0;

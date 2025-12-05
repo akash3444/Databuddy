@@ -1,26 +1,31 @@
 "use client";
 
+import { authClient } from "@databuddy/auth/client";
 import { PaperclipIcon, RobotIcon, WarningIcon } from "@phosphor-icons/react";
 import type { UIMessage } from "ai";
 import Image from "next/image";
-import { Message, MessageAvatar, MessageContent } from "@/components/ai-elements/message";
+import {
+	Message,
+	MessageAvatar,
+	MessageContent,
+} from "@/components/ai-elements/message";
 import { Response } from "@/components/ai-elements/response";
 import { ToolOutput } from "@/components/ai-elements/tool";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useSession } from "@/components/layout/session-provider";
 import { AgentMessageActions } from "./agent-message-actions";
-import { authClient } from "@databuddy/auth/client";
 
-interface AgentMessagesProps {
+type AgentMessagesProps = {
 	messages: UIMessage[];
 	isStreaming?: boolean;
 	hasError?: boolean;
-}
+};
 
 function getTextContent(message: UIMessage): string {
-	if (!message.parts) return "";
+	if (!message.parts) {
+		return "";
+	}
 	return message.parts
 		.filter(
 			(part): part is { type: "text"; text: string } => part.type === "text"
@@ -43,22 +48,12 @@ function extractToolParts(parts: UIMessage["parts"]) {
 	}>;
 }
 
-const DEBUG_PREFIX = "[AGENT-MESSAGES]";
-
 export function AgentMessages({
 	messages,
 	isStreaming = false,
 	hasError = false,
 }: AgentMessagesProps) {
-	console.log(`${DEBUG_PREFIX} Render:`, {
-		messagesCount: messages.length,
-		isStreaming,
-		hasError,
-		messages: messages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
-	});
-
 	if (messages.length === 0) {
-		console.log(`${DEBUG_PREFIX} No messages to render`);
 		return null;
 	}
 
@@ -72,10 +67,10 @@ export function AgentMessages({
 				const toolParts = extractToolParts(message.parts);
 				const hasToolErrors = toolParts.some((tool) => tool.errorText);
 				const showError = isLastMessage && hasError && isAssistant;
-				const isMessageFinished = !isLastMessage || !isStreaming;
+				const isMessageFinished = !(isLastMessage && isStreaming);
 
 				return (
-					<div key={message.id} className="group">
+					<div className="group" key={message.id}>
 						{/* Render tool parts (including errors) */}
 						{toolParts.length > 0 && (
 							<Message from={message.role}>
@@ -87,11 +82,11 @@ export function AgentMessages({
 													<div className="rounded border border-destructive/20 bg-destructive/5 p-3">
 														<div className="flex items-start gap-2">
 															<WarningIcon
-																className="size-4 shrink-0 text-destructive mt-0.5"
+																className="mt-0.5 size-4 shrink-0 text-destructive"
 																weight="fill"
 															/>
-															<div className="flex-1 min-w-0">
-																<p className="font-medium text-destructive text-sm mb-1">
+															<div className="min-w-0 flex-1">
+																<p className="mb-1 font-medium text-destructive text-sm">
 																	Tool Error: {toolPart.toolName}
 																</p>
 																<p className="text-destructive/80 text-xs">
@@ -101,17 +96,20 @@ export function AgentMessages({
 														</div>
 													</div>
 												)}
-												{!toolPart.errorText && toolPart.output !== undefined && (
-													<ToolOutput
-														output={
-															typeof toolPart.output === "string" ||
-															typeof toolPart.output === "object"
-																? (toolPart.output as string | Record<string, unknown>)
-																: String(toolPart.output)
-														}
-														errorText={toolPart.errorText}
-													/>
-												)}
+												{!toolPart.errorText &&
+													toolPart.output !== undefined && (
+														<ToolOutput
+															errorText={toolPart.errorText}
+															output={
+																typeof toolPart.output === "string" ||
+																typeof toolPart.output === "object"
+																	? (toolPart.output as
+																			| string
+																			| Record<string, unknown>)
+																	: String(toolPart.output)
+															}
+														/>
+													)}
 											</div>
 										))}
 									</div>
@@ -126,9 +124,11 @@ export function AgentMessages({
 						{fileParts.length > 0 && (
 							<Message from={message.role}>
 								<MessageContent className="max-w-[80%]">
-									<div className="flex flex-wrap gap-2 mb-2">
+									<div className="mb-2 flex flex-wrap gap-2">
 										{fileParts.map((part) => {
-											if (part.type !== "file") return null;
+											if (part.type !== "file") {
+												return null;
+											}
 
 											const file = part as {
 												type: "file";
@@ -143,14 +143,14 @@ export function AgentMessages({
 											if (isImage && file.url) {
 												return (
 													<div
+														className="relative overflow-hidden rounded border"
 														key={fileKey}
-														className="relative rounded border overflow-hidden"
 													>
 														<Image
-															src={file.url}
 															alt={file.filename || "attachment"}
-															className="max-w-xs max-h-48 object-cover"
+															className="max-h-48 max-w-xs object-cover"
 															height={192}
+															src={file.url}
 															unoptimized
 															width={300}
 														/>
@@ -160,8 +160,8 @@ export function AgentMessages({
 
 											return (
 												<div
+													className="flex items-center gap-2 rounded border bg-muted/50 px-3 py-2"
 													key={fileKey}
-													className="flex items-center gap-2 px-3 py-2 rounded border bg-muted/50"
 												>
 													<PaperclipIcon
 														className="size-4 shrink-0 text-muted-foreground"
@@ -190,7 +190,9 @@ export function AgentMessages({
 									)}
 								</MessageContent>
 								{message.role === "user" && <UserMessageAvatar />}
-								{message.role === "assistant" && <AgentMessageAvatar hasError={hasError} />}
+								{message.role === "assistant" && (
+									<AgentMessageAvatar hasError={hasError} />
+								)}
 							</Message>
 						)}
 
@@ -203,7 +205,8 @@ export function AgentMessages({
 											Failed to generate response
 										</p>
 										<p className="text-muted-foreground text-xs">
-											There was an error processing your request. Please try again.
+											There was an error processing your request. Please try
+											again.
 										</p>
 									</div>
 								</MessageContent>
@@ -212,20 +215,17 @@ export function AgentMessages({
 						)}
 
 						{/* Render message actions for finished assistant messages */}
-						{isAssistant &&
-							isMessageFinished &&
-							textContent &&
-							!showError && (
-								<div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-									<div className="flex items-center gap-1 mt-3">
-										<AgentMessageActions
-											isError={false}
-											isLastMessage={isLastMessage}
-											messageContent={textContent}
-										/>
-									</div>
+						{isAssistant && isMessageFinished && textContent && !showError && (
+							<div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+								<div className="mt-3 flex items-center gap-1">
+									<AgentMessageActions
+										isError={false}
+										isLastMessage={isLastMessage}
+										messageContent={textContent}
+									/>
 								</div>
-							)}
+							</div>
+						)}
 					</div>
 				);
 			})}
@@ -237,23 +237,23 @@ function UserMessageAvatar() {
 	const { data: session, isPending } = authClient.useSession();
 	const user = session?.user;
 
-	if (isPending) return <Skeleton className="size-8 rounded-full shrink-0" />;
+	if (isPending) {
+		return <Skeleton className="size-8 shrink-0 rounded-full" />;
+	}
 
 	return (
 		<MessageAvatar
-			src={user?.image || ""}
 			name={user?.name || user?.email || "User"}
+			src={user?.image || ""}
 		/>
 	);
 }
 
 function AgentMessageAvatar({ hasError = false }: { hasError?: boolean }) {
 	return (
-		<Avatar className="size-8 ring-1 ring-border shrink-0">
+		<Avatar className="size-8 shrink-0 ring-1 ring-border">
 			<AvatarFallback
-				className={cn(
-					hasError ? "bg-destructive/10" : "bg-primary/10"
-				)}
+				className={cn(hasError ? "bg-destructive/10" : "bg-primary/10")}
 			>
 				<RobotIcon
 					className={cn(
@@ -274,10 +274,10 @@ export function MessagesLoadingSkeleton() {
 				<MessageContent className="max-w-[80%]">
 					<Skeleton className="h-4 w-32" />
 				</MessageContent>
-				<Skeleton className="size-8 rounded-full shrink-0" />
+				<Skeleton className="size-8 shrink-0 rounded-full" />
 			</Message>
 			<Message from="assistant">
-				<Skeleton className="size-8 rounded-full shrink-0" />
+				<Skeleton className="size-8 shrink-0 rounded-full" />
 				<MessageContent className="max-w-[80%]">
 					<div className="space-y-2">
 						<Skeleton className="h-4 w-full" />

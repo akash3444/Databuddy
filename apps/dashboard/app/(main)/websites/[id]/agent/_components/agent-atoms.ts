@@ -1,5 +1,5 @@
-import { atom } from "jotai";
 import type { UIMessage } from "ai";
+import { atom } from "jotai";
 
 // Types for UI state (not message state - that comes from SDK)
 export type AgentStatus =
@@ -20,14 +20,14 @@ export type ArtifactStage =
     | "rendering"
     | "complete";
 
-export interface AgentArtifact {
+export type AgentArtifact = {
     id: string;
     type: ArtifactType;
     title: string;
     data: unknown;
-}
+};
 
-export interface AgentCommand {
+export type AgentCommand = {
     id: string;
     command: string;
     title: string;
@@ -39,7 +39,9 @@ export interface AgentCommand {
 
 // Message state atoms - managed with Jotai for persistence
 export const agentMessagesAtom = atom<UIMessage[]>([]);
-export const agentStatusAtom = atom<"idle" | "streaming" | "submitted" | "error">("idle");
+export const agentStatusAtom = atom<
+    "idle" | "streaming" | "submitted" | "error"
+>("idle");
 
 // UI state atoms
 export const agentTitleAtom = atom<string | null>(null);

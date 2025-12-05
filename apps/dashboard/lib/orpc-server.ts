@@ -19,19 +19,23 @@ export const getServerRPCClient = cache(async (): Promise<RouterClient<AppRouter
 
     const link = new RPCLink({
         url: `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/rpc`,
-        fetch: async (url, options) => {
-            return fetch(url, {
+        fetch: (url, options) => {
+            const requestInit: RequestInit = {
                 ...options,
+                credentials: "include", // Required for cross-origin requests with cookies in production
                 headers: {
                     ...forwardedHeaders,
-                    ...options?.headers,
-                    // Ensure cookies are passed
+                    ...(options && "headers" in options
+                        ? (options.headers as Record<string, string>)
+                        : {}),
+                    // Ensure cookies are passed (explicitly set to override any defaults)
                     cookie: cookieHeader,
                 },
-            });
+            };
+            return fetch(url, requestInit);
         },
     });
 
-    return createORPCClient(link);
+    return createORPCClient(link) as RouterClient<AppRouter>;
 });
 

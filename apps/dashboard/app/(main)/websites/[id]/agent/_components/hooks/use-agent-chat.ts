@@ -11,8 +11,6 @@ import { useAgentChatId } from "../agent-chat-context";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
-const DEBUG_PREFIX = "[AGENT-CHAT]";
-
 export function useAgentChat() {
     const chatId = useAgentChatId();
     const params = useParams();
@@ -23,12 +21,9 @@ export function useAgentChat() {
     // Use route chatId if available, otherwise fall back to context chatId
     const stableChatId = routeChatId ?? chatId;
 
-    console.log(`${DEBUG_PREFIX} Hook render - chatId: ${chatId}, routeChatId: ${routeChatId}, stableChatId: ${stableChatId}`);
-
     // Store stable chatId in ref to prevent useChat from resetting
     const stableChatIdRef = useRef<string>(stableChatId);
     if (stableChatIdRef.current !== stableChatId) {
-        console.log(`${DEBUG_PREFIX} ChatId changed - old: ${stableChatIdRef.current}, new: ${stableChatId}`);
         stableChatIdRef.current = stableChatId;
     }
 
@@ -38,7 +33,10 @@ export function useAgentChat() {
                 api: `${API_URL}/v1/agent/chat`,
                 credentials: "include",
                 prepareSendMessagesRequest({ messages }) {
-                    const lastMessage = messages[messages.length - 1];
+                    const lastMessage = messages.at(-1);
+                    if (!lastMessage) {
+                        throw new Error("No messages to send");
+                    }
                     return {
                         body: {
                             id: stableChatId,
@@ -58,23 +56,12 @@ export function useAgentChat() {
         transport,
     });
 
-    console.log(`${DEBUG_PREFIX} SDK messages:`, {
-        count: sdkMessages.length,
-        messages: sdkMessages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
-    });
-
     // Simply use SDK messages directly - no complex syncing needed
     const messages = sdkMessages;
 
     // Map SDK status to our status type
     const mappedStatus = sdkStatus === "ready" ? "idle" : sdkStatus as "idle" | "submitted" | "streaming" | "error";
     const status = mappedStatus;
-
-    console.log(`${DEBUG_PREFIX} Final messages for display:`, {
-        count: messages.length,
-        source: "sdk",
-        messages: messages.map(m => ({ id: m.id, role: m.role, textLength: m.parts?.find(p => p.type === "text")?.text?.length || 0 }))
-    });
 
     const {
         sendMessage: sdkSendMessage,
@@ -89,13 +76,9 @@ export function useAgentChat() {
             content: string,
             metadata?: { agentChoice?: string; toolChoice?: string }
         ) => {
-            if (!content.trim()) return;
-
-            console.log(`${DEBUG_PREFIX} sendMessage called:`, {
-                content: content.trim(),
-                currentMessages: messages.length,
-                sdkMessages: sdkMessages.length
-            });
+            if (!content.trim()) {
+                return;
+            }
 
             lastUserMessageRef.current = content.trim();
             setInput("");
@@ -105,15 +88,14 @@ export function useAgentChat() {
                 metadata,
             });
         },
-        [sdkSendMessage, setInput, messages.length, sdkMessages.length]
+        [sdkSendMessage, setInput]
     );
 
     const reset = useCallback(() => {
-        console.log(`${DEBUG_PREFIX} reset called - clearing ${sdkMessages.length} SDK messages`);
         sdkReset();
         setInput("");
         lastUserMessageRef.current = "";
-    }, [sdkReset, setInput, sdkMessages.length]);
+    }, [sdkReset, setInput]);
 
     const stop = useCallback(() => {
         sdkStop();
@@ -122,7 +104,9 @@ export function useAgentChat() {
     // Retry by resending the last user message
     const retry = useCallback(() => {
         const lastUserMessage = lastUserMessageRef.current;
-        if (!lastUserMessage) return;
+        if (!lastUserMessage) {
+            return;
+        }
 
         sdkSendMessage({
             text: lastUserMessage,

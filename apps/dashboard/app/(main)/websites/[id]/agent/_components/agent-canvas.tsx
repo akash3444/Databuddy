@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { currentArtifactAtom } from "./agent-atoms";
 
-interface AgentCanvasProps {
+type AgentCanvasProps = {
 	onClose: () => void;
-}
+};
 
 export function AgentCanvas({ onClose }: AgentCanvasProps) {
 	const currentArtifact = useAtomValue(currentArtifactAtom);
@@ -82,14 +82,14 @@ function CanvasEmptyState() {
 	);
 }
 
-interface ArtifactContentProps {
+type ArtifactContentProps = {
 	artifact: {
 		id: string;
 		type: "chart" | "table" | "report" | "insight";
 		title: string;
 		data: unknown;
 	};
-}
+};
 
 function ArtifactContent({ artifact }: ArtifactContentProps) {
 	return (

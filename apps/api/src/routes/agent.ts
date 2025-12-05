@@ -1,7 +1,14 @@
 import { auth, websitesApi } from "@databuddy/auth";
 import { smoothStream } from "ai";
 import { Elysia, t } from "elysia";
-import { buildAppContext, reflectionAgent, triageAgent } from "../ai";
+import {
+    type AppContext,
+    buildAppContext,
+    type createAgent,
+    reflectionAgentHaiku,
+    reflectionAgentMax,
+    triageAgent,
+} from "../ai";
 import { record, setAttributes } from "../lib/tracing";
 import { validateWebsite } from "../lib/website-utils";
 
@@ -23,21 +30,24 @@ const AgentRequestSchema = t.Object({
     }),
     id: t.Optional(t.String()),
     timezone: t.Optional(t.String()),
+    model: t.Optional(
+        t.Union([t.Literal("basic"), t.Literal("agent"), t.Literal("agent-max")])
+    ),
 });
 
-interface UIMessage {
+type UIMessage = {
     id: string;
     role: "user" | "assistant";
     parts: Array<{ type: "text"; text: string }>;
-}
+};
 
-interface IncomingMessage {
+type IncomingMessage = {
     id?: string;
     role: "user" | "assistant";
     content?: string;
     parts?: Array<{ type: string; text?: string }>;
     text?: string;
-}
+};
 
 function toUIMessage(msg: IncomingMessage): UIMessage {
     if (msg.parts && msg.parts.length > 0) {
@@ -133,16 +143,40 @@ export const agent = new Elysia({ prefix: "/v1/agent" })
                         requestHeaders: request.headers,
                     };
 
-                    // Use reflectionAgent for complex multi-step reasoning and orchestration
-                    // It can reflect on responses, decide next steps, and coordinate investigations
-                    // Use triageAgent for simple routing-only scenarios
-                    const agent = reflectionAgent;
+                    // Select agent based on model preference
+                    // basic: triageAgent (simple routing)
+                    // agent: reflectionAgentHaiku (reflection with haiku model)
+                    // agent-max: reflectionAgentMax (reflection with sonnet, increased limits)
+                    const modelType = body.model ?? "agent";
+                    let agent: ReturnType<typeof createAgent<AppContext>>;
+                    let maxRounds = 5;
+                    let maxSteps = 20;
+
+                    switch (modelType) {
+                        case "basic":
+                            agent = triageAgent;
+                            maxRounds = 1;
+                            maxSteps = 5;
+                            break;
+                        case "agent":
+                            agent = reflectionAgentHaiku;
+                            maxRounds = 5;
+                            maxSteps = 20;
+                            break;
+                        case "agent-max":
+                            agent = reflectionAgentMax;
+                            maxRounds = 10;
+                            maxSteps = 40;
+                            break;
+                        default:
+                            agent = reflectionAgentHaiku;
+                    }
 
                     return agent.toUIMessageStream({
                         message,
                         strategy: "auto",
-                        maxRounds: 5,
-                        maxSteps: 20,
+                        maxRounds,
+                        maxSteps,
                         context: contextWithChatId,
                         experimental_transform: smoothStream({
                             chunking: "word",
