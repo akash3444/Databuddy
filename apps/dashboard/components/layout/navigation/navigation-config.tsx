@@ -28,6 +28,7 @@ import {
 	ReceiptIcon,
 	RepeatIcon,
 	RoadHorizonIcon,
+	RobotIcon,
 	ShieldCheckIcon,
 	SpeakerHighIcon,
 	TargetIcon,
@@ -271,11 +272,11 @@ export const websiteNavigation: NavigationSection[] = [
 			rootLevel: false,
 			gatedFeature: GATED_FEATURES.FEATURE_FLAGS,
 		}),
-		// createNavItem("Databunny AI", RobotIcon, "/assistant", {
-		// 	alpha: true,
-		// 	hideFromDemo: true,
-		// 	rootLevel: false,
-		// }),
+		createNavItem("AI Agent", RobotIcon, "/agent", {
+			alpha: true,
+			rootLevel: false,
+			gatedFeature: GATED_FEATURES.AI_AGENT,
+		}),
 	]),
 ];
 

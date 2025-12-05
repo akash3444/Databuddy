@@ -4,7 +4,7 @@ globs:
 alwaysApply: true
 ---
 
-Always ensure type-safety, don't use type: any unless needed, when creating APIs, responses, or components, create proper interfaces and make them in the shared types folders where it fits best, not in the same file
+when using 'text-right', always add 'text-balance' so its not ugly
 
 When working on anything, try to split off components, utils, anything reusable to ensure better loading speed and less complexity
 

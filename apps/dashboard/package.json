@@ -9,6 +9,7 @@
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
+    "@ai-sdk-tools/store": "^1.2.0",
     "@databuddy/auth": "workspace:*",
     "@databuddy/db": "workspace:*",
     "@databuddy/env": "workspace:*",
@@ -35,7 +36,7 @@
     "@types/d3-scale": "^4.0.9",
     "@types/geojson": "^7946.0.16",
     "@types/leaflet": "^1.9.21",
-    "ai": "^5.0.68",
+    "ai": "^5.0.106",
     "autumn-js": "^0.1.40",
     "babel-plugin-react-compiler": "^19.1.0-rc.1-rc-af1b7da-20250421",
     "class-variance-authority": "catalog:",

@@ -40,6 +40,7 @@ export const GATED_FEATURES = {
     GEOGRAPHIC: "geographic",
     // AI
     AI_ASSISTANT: "ai_assistant",
+    AI_AGENT: "ai_agent",
     // Export & API
     DATA_EXPORT: "data_export",
     API_ACCESS: "api_access",
@@ -64,6 +65,7 @@ export const PLAN_FEATURES: Record<PlanId, Record<GatedFeatureId, boolean>> = {
         [GATED_FEATURES.ERROR_TRACKING]: false,
         [GATED_FEATURES.GEOGRAPHIC]: true,
         [GATED_FEATURES.AI_ASSISTANT]: true,
+        [GATED_FEATURES.AI_AGENT]: false,
         [GATED_FEATURES.DATA_EXPORT]: true,
         [GATED_FEATURES.API_ACCESS]: false,
         [GATED_FEATURES.TEAM_ROLES]: false,
@@ -78,6 +80,7 @@ export const PLAN_FEATURES: Record<PlanId, Record<GatedFeatureId, boolean>> = {
         [GATED_FEATURES.ERROR_TRACKING]: true,
         [GATED_FEATURES.GEOGRAPHIC]: true,
         [GATED_FEATURES.AI_ASSISTANT]: true,
+        [GATED_FEATURES.AI_AGENT]: false,
         [GATED_FEATURES.DATA_EXPORT]: true,
         [GATED_FEATURES.API_ACCESS]: false,
         [GATED_FEATURES.TEAM_ROLES]: false,
@@ -92,6 +95,7 @@ export const PLAN_FEATURES: Record<PlanId, Record<GatedFeatureId, boolean>> = {
         [GATED_FEATURES.ERROR_TRACKING]: true,
         [GATED_FEATURES.GEOGRAPHIC]: true,
         [GATED_FEATURES.AI_ASSISTANT]: true,
+        [GATED_FEATURES.AI_AGENT]: true,
         [GATED_FEATURES.DATA_EXPORT]: true,
         [GATED_FEATURES.API_ACCESS]: true,
         [GATED_FEATURES.TEAM_ROLES]: true,
@@ -106,6 +110,7 @@ export const PLAN_FEATURES: Record<PlanId, Record<GatedFeatureId, boolean>> = {
         [GATED_FEATURES.ERROR_TRACKING]: true,
         [GATED_FEATURES.GEOGRAPHIC]: true,
         [GATED_FEATURES.AI_ASSISTANT]: true,
+        [GATED_FEATURES.AI_AGENT]: true,
         [GATED_FEATURES.DATA_EXPORT]: true,
         [GATED_FEATURES.API_ACCESS]: true,
         [GATED_FEATURES.TEAM_ROLES]: true,
@@ -180,6 +185,12 @@ export const FEATURE_METADATA: Record<FeatureId | GatedFeatureId, FeatureMeta> =
         name: "AI Assistant",
         description: "Chat-based analytics assistant",
         upgradeMessage: "AI Assistant is available on all plans",
+    },
+    [GATED_FEATURES.AI_AGENT]: {
+        name: "AI Agent",
+        description: "Autonomous AI agent for advanced analytics insights",
+        upgradeMessage: "Upgrade to Pro for AI Agent access",
+        minPlan: PLAN_IDS.PRO,
     },
     [GATED_FEATURES.DATA_EXPORT]: {
         name: "Data Export",

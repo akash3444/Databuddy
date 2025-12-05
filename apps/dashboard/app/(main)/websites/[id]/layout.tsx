@@ -38,6 +38,7 @@ export default function WebsiteLayout({ children }: WebsiteLayoutProps) {
 		"/databunny",
 		"/settings",
 		"/users",
+		"/agent",
 	];
 
 	const isAssistantPage = noToolbarPages.some((page) =>
