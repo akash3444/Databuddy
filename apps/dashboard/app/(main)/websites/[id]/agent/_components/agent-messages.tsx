@@ -92,7 +92,6 @@ export function AgentMessages({
 
 				return (
 					<div className="group" key={message.id}>
-						{/* Render tool parts (including errors) */}
 						{toolParts.length > 0 && (
 							<Message from={message.role}>
 								<MessageContent className="max-w-[80%] space-y-3">
@@ -144,7 +143,6 @@ export function AgentMessages({
 							</Message>
 						)}
 
-						{/* Render reasoning parts */}
 						{reasoningParts.length > 0 && (
 							<Message from={message.role}>
 								<MessageContent
@@ -170,7 +168,6 @@ export function AgentMessages({
 							</Message>
 						)}
 
-						{/* Render file attachments */}
 						{fileParts.length > 0 && (
 							<Message from={message.role}>
 								<MessageContent className="max-w-[80%]">
@@ -229,7 +226,6 @@ export function AgentMessages({
 							</Message>
 						)}
 
-						{/* Render text content */}
 						{textContent && !showError && (
 							<Message from={message.role}>
 								<MessageContent className="max-w-[80%]" variant="flat">
@@ -246,7 +242,6 @@ export function AgentMessages({
 							</Message>
 						)}
 
-						{/* Render error state */}
 						{showError && (
 							<Message from="assistant">
 								<MessageContent className="max-w-[80%]">
