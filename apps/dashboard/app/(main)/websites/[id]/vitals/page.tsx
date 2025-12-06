@@ -245,7 +245,7 @@ export default function VitalsPage() {
 					/>
 				) : (
 					<div className="rounded border bg-card p-8 text-center">
-						<p className="text-muted-foreground text-sm">
+						<p className="mx-auto text-muted-foreground text-sm">
 							Click on a metric above to add it to the chart
 						</p>
 					</div>
@@ -260,7 +260,7 @@ export default function VitalsPage() {
 						<h3 className="mt-4 font-medium text-foreground">
 							No Web Vitals data yet
 						</h3>
-						<p className="mt-1 text-muted-foreground text-sm">
+						<p className="mx-auto mt-1 text-muted-foreground text-sm">
 							Web Vitals will appear here once your tracker starts collecting
 							performance data from real users.
 						</p>
